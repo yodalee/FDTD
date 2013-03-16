@@ -1,0 +1,3 @@
+FDTD 0.1.1 (三月 16, 2013):
+	* Add: complete the one dimension FDTD with many default value:
+		C, L, delta_x, gridsize, source, all defined by default value
