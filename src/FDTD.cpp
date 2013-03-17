@@ -8,10 +8,10 @@ FDTD::FDTD(double _c, double _l, double _f, int _sec){
 	capacitance = _c;
 	inductance = _l;
 	frequency = _f;
-	delta_x = 0.05; //set space section size 0.01 m
+	delta_x = 0.5; //set space section size 0.01 m
 	Rs = 1;
 	Rl = 2;
-	iteration = 500;
+	iteration = 5000;
 }
 
 void FDTD::solve(){
@@ -47,15 +47,16 @@ void FDTD::solveone(const double* V1, const double* I1, double* V2, double* I2){
 	//left bound
 	double Z = delta_t/(capacitance*delta_x);
 	double G = delta_t/(inductance*delta_x);
+	//need a better way to represent source
 	V2[0] = (1-2*Z/Rs)*V1[0] - 2*Z*I1[0] + (2*Z/Rs)*(cos(2*pi*frequency*time));
 	//right bound
 	V2[gridi_bound] = (1-2*Z/Rl)*V1[gridi_bound] + 2*Z*I1[gridi_bound-1];
 	//center zone
-	
-	I2[0] = I1[0]- G*(V1[1]-V1[0]);
 	for (int idx = 1; idx < gridi_bound; ++idx) {
-		V2[idx] = V1[idx] - Z*(I1[idx] - I1[idx-1])/2;
-		I2[idx] = I1[idx]- G*(V1[idx+1]-V1[idx]);
+		V2[idx] = V1[idx] - Z*(I1[idx] - I1[idx-1]);
+	}
+	for (int idx = 0; idx < gridi_bound; ++idx) {
+		I2[idx] = I1[idx] - G*(V2[idx+1]-V2[idx]);
 	}
 };
 
@@ -70,11 +71,11 @@ void FDTD::solveone(const double* V1, const double* I1, double* V2, double* I2){
 //********************************************
 void FDTD::initialStruct(){
 	double u = 1 / sqrt(capacitance * inductance);
-	delta_t = delta_x / (2*u);
+	delta_t = 0.5*delta_x/u;
 	time = 0;
 	//using the twice of courant limit
 	//int gridi = 256;
-	gridi_bound = 255;
+	gridi_bound = 40;
 	//initialize the memory space
 	V = new double[gridi_bound+1]();
 	I = new double[gridi_bound]();
