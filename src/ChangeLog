@@ -1,3 +1,7 @@
 FDTD 0.1.1 (三月 16, 2013):
 	* Add: complete the one dimension FDTD with many default value:
 		C, L, delta_x, gridsize, source, all defined by default value
+
+FDTD 0.1.2 (三月 17, 2013):
+	* Fixed: the diverse problem cause by index error
+	* Add: Auto determine the slice size and time step size

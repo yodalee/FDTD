@@ -42,7 +42,7 @@ int main (int argc, char *argv[])
 	double capacitance = 1;
 	double inductance = 1;
 	double frequency = 1;
-	int sec = 10;
+	int sec = 20;
     char c;
     while((c=getopt(argc, argv, "hC:L:f:s:")) != -1)
     {

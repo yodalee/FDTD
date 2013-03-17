@@ -8,10 +8,10 @@ FDTD::FDTD(double _c, double _l, double _f, int _sec){
 	capacitance = _c;
 	inductance = _l;
 	frequency = _f;
-	delta_x = 0.5; //set space section size 0.01 m
+	sec = _sec;
 	Rs = 1;
 	Rl = 2;
-	iteration = 5000;
+	iteration = 500;
 }
 
 void FDTD::solve(){
@@ -71,6 +71,8 @@ void FDTD::solveone(const double* V1, const double* I1, double* V2, double* I2){
 //********************************************
 void FDTD::initialStruct(){
 	double u = 1 / sqrt(capacitance * inductance);
+	double lambda = u/frequency;
+	delta_x = lambda/sec; //set space section size 0.01 m
 	delta_t = 0.5*delta_x/u;
 	time = 0;
 	//using the twice of courant limit
