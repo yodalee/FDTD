@@ -33,7 +33,8 @@ using namespace std;
 
 int usage()
 {
-	cerr << "usage:\n FDTD -C capacitance -L inductance -f frequency" << endl;
+	cerr << "usage:\n FDTD -C capacitance -L inductance -f frequency\n" << endl;
+	cerr << "-S source_name(single_frequency, gaussian)" << endl;
 	exit(EXIT_FAILURE);
 }
 
@@ -43,8 +44,9 @@ int main (int argc, char *argv[])
 	double inductance = 1;
 	double frequency = 1;
 	int sec = 20;
+	string source = "single_frequency";
     char c;
-    while((c=getopt(argc, argv, "hC:L:f:s:")) != -1)
+    while((c=getopt(argc, argv, "hC:L:f:s:S:")) != -1)
     {
         switch(c)
         {
@@ -60,8 +62,11 @@ int main (int argc, char *argv[])
             case 'f':		//set simulation frequency
                 frequency = atof(optarg);
                 break;
-			case 's':
+			case 's':		//set lambda section number
 				sec = atoi(optarg);
+				break;
+			case 'S':		//set source type
+				source = optarg;
 				break;
             default:
 				cerr << "Wrong Command" << endl;
@@ -69,7 +74,7 @@ int main (int argc, char *argv[])
         }
     }
 
-    FDTD fdtd (capacitance, inductance, frequency, sec);
+    FDTD fdtd (capacitance, inductance, frequency, sec, source);
     fdtd.solve ();
 
     return EXIT_SUCCESS;

@@ -1,15 +1,19 @@
+#include <string>
 #include "constant.h"
+#include "source.h"
 
 class FDTD {
 public:
-	FDTD (double _c, double _l, double _f, int _sec);
+	FDTD (double _c, double _l, double _f, int _sec, string source);
 	~FDTD(){
 		delete []_V;
 		delete []_I;
 		delete []V;
 		delete []I;
 	}
-	void initialStruct();
+	source* generate_source(string type){ return createsource(type);}
+	source* createsource(string type);
+	void initialStruct(int sec, string type);
 	void solve();
 	void solveone(const double* V1, const double* I1, double* V2, double* I2);
 	void output();
@@ -21,10 +25,10 @@ private:
 	double delta_t;
 	double Rs;
 	double Rl;
+	source* input;
 	
 	int gridi_bound;
-	int iteration;
-	int sec;
+	int max_iteration;
 	double time;
 	double* V;
 	double* I;

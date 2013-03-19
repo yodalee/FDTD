@@ -1,22 +1,34 @@
 #include <iostream>
 #include <cmath>
+#include <cstdlib>
+#include <algorithm>
 using namespace std;
 
 #include "FDTD.h"
 
-FDTD::FDTD(double _c, double _l, double _f, int _sec){
+FDTD::FDTD(double _c, double _l, double _f, int _sec, string source){
 	capacitance = _c;
 	inductance = _l;
 	frequency = _f;
-	sec = _sec;
-	Rs = 1;
+	Rs = 0.3;
 	Rl = 2;
-	iteration = 500;
+	max_iteration = 500;
+	initialStruct(_sec, source);
+}
+
+source* FDTD::createsource(string type){
+	if (type == "gaussian") {
+		return (new gaussian);
+	} else if(type == "single_frequency") {
+		return (new single_frequency);
+	} else {
+		std::cerr << "invalid source option!\n";
+		exit(EXIT_FAILURE);
+	}
 }
 
 void FDTD::solve(){
-	initialStruct();
-	for (int iterate = 0; iterate < iteration; ++iterate) {
+	for (int iterate = 0; iterate < max_iteration; ++iterate) {
 		solveone(V,I,_V,_I); //calculate solution by V,I to _V,_I
 		//copy solution data from _V,_I to V,I
 		for (int copy_idx = 0; copy_idx != gridi_bound; ++copy_idx) {
@@ -48,7 +60,7 @@ void FDTD::solveone(const double* V1, const double* I1, double* V2, double* I2){
 	double Z = delta_t/(capacitance*delta_x);
 	double G = delta_t/(inductance*delta_x);
 	//need a better way to represent source
-	V2[0] = (1-2*Z/Rs)*V1[0] - 2*Z*I1[0] + (2*Z/Rs)*(cos(2*pi*frequency*time));
+	V2[0] = (1-2*Z/Rs)*V1[0] - 2*Z*I1[0] + (2*Z/Rs)*(input->get(time));
 	//right bound
 	V2[gridi_bound] = (1-2*Z/Rl)*V1[gridi_bound] + 2*Z*I1[gridi_bound-1];
 	//center zone
@@ -69,15 +81,18 @@ void FDTD::solveone(const double* V1, const double* I1, double* V2, double* I2){
 //	u * delta_t / delta_x <= 1
 //	detemine the delta_t
 //********************************************
-void FDTD::initialStruct(){
+void FDTD::initialStruct(int sec, string type){
+	input = generate_source(type);
+	double nyquist = input->set(1.0, frequency);
+	//set the source
 	double u = 1 / sqrt(capacitance * inductance);
 	double lambda = u/frequency;
 	delta_x = lambda/sec; //set space section size 0.01 m
-	delta_t = 0.5*delta_x/u;
+	delta_t = min(0.5*delta_x/u, 1/nyquist);
 	time = 0;
 	//using the twice of courant limit
 	//int gridi = 256;
-	gridi_bound = 40;
+	gridi_bound = 10;
 	//initialize the memory space
 	V = new double[gridi_bound+1]();
 	I = new double[gridi_bound]();
