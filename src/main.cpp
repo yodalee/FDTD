@@ -33,7 +33,9 @@ using namespace std;
 
 int usage()
 {
-	cerr << "usage:\n FDTD -C capacitance -L inductance -f frequency\n" << endl;
+	cerr << "usage:\n FDTD -C capacitance -L inductance -f frequency\n";
+	cerr << "-X xsize(meter) -N xsection -t(sec.) -k timesection\n";
+	cerr << "-s sourceR, -l loadR\n";
 	cerr << "-S source_name(single_frequency, gaussian)" << endl;
 	exit(EXIT_FAILURE);
 }
@@ -43,10 +45,15 @@ int main (int argc, char *argv[])
 	double capacitance = 1;
 	double inductance = 1;
 	double frequency = 1;
-	int sec = 20;
+	double xsize = 2.5;
+	int xsection = 15;
+	double time = 2;
+	int timesec = 120;
+	double rs = 1;
+	double rl = 1;
 	string source = "single_frequency";
     char c;
-    while((c=getopt(argc, argv, "hC:L:f:s:S:")) != -1)
+    while((c=getopt(argc, argv, "hC:L:f:X:N:t:k:s:l:S:")) != -1)
     {
         switch(c)
         {
@@ -62,9 +69,24 @@ int main (int argc, char *argv[])
             case 'f':		//set simulation frequency
                 frequency = atof(optarg);
                 break;
-			case 's':		//set lambda section number
-				sec = atoi(optarg);
+            case 'X':		//set xsize
+                xsize = atof(optarg);
+                break;
+			case 'N':		//set lambda section number
+				xsection = atoi(optarg);
 				break;
+            case 't':		//set xsize
+                time = atof(optarg);
+                break;
+			case 'k':		//set lambda section number
+				timesec = atoi(optarg);
+				break;
+            case 's':		//set xsize
+                rs = atof(optarg);
+                break;
+            case 'l':		//set xsize
+                rl = atof(optarg);
+                break;
 			case 'S':		//set source type
 				source = optarg;
 				break;
@@ -74,7 +96,7 @@ int main (int argc, char *argv[])
         }
     }
 
-    FDTD fdtd (capacitance, inductance, frequency, sec, source);
+    FDTD fdtd (capacitance, inductance, frequency, xsize, xsection, time, timesec, rs, rl, source);
     fdtd.solve ();
 
     return EXIT_SUCCESS;

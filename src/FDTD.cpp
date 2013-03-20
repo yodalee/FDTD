@@ -6,14 +6,13 @@ using namespace std;
 
 #include "FDTD.h"
 
-FDTD::FDTD(double _c, double _l, double _f, int _sec, string source){
+FDTD::FDTD (double _c, double _l, double _f, double x, int N, double time, int t_sec, double rs, double rl, string source){
 	capacitance = _c;
 	inductance = _l;
 	frequency = _f;
-	Rs = 0.3;
-	Rl = 2;
-	max_iteration = 500;
-	initialStruct(_sec, source);
+	Rs = rs;
+	Rl = rl;
+	initialStruct(x, N, time, t_sec, source);
 }
 
 source* FDTD::createsource(string type){
@@ -37,15 +36,11 @@ void FDTD::solve(){
 		}
 		V[gridi_bound] = _V[gridi_bound];
 		//need a proper way to 
+		cout << time << " ";
 		for (int idx = 0; idx < gridi_bound+1; ++idx) {
 			cout << V[idx] << " ";
 		}
 		cout << endl;
-		//for (int idx = 0; idx < gridi_bound; ++idx) {
-		//	cout << I[idx] << " ";
-		//}
-		//cout << endl;
-		//cout << endl;
 		time += delta_t;
 	}
 };
@@ -74,25 +69,31 @@ void FDTD::solveone(const double* V1, const double* I1, double* V2, double* I2){
 
 //********************************************
 // Function: initialStruct
-// Description: check structure limit and initial memory
+// Description: 
+//  initial structure parameter and check within limit
+//  initial memory
 //
 // Structure limit:
 //	propagation speed u, time slice delta_t, space slice delta_x	
-//	u * delta_t / delta_x <= 1
+//	1. wave length section: lambda > 10*delta_x
+//	2. courant limit: u * delta_t / delta_x <= 1
 //	detemine the delta_t
 //********************************************
-void FDTD::initialStruct(int sec, string type){
+void FDTD::initialStruct(double x, int xsec, double time, int tsec, string type){
 	input = generate_source(type);
 	double nyquist = input->set(1.0, frequency);
 	//set the source
 	double u = 1 / sqrt(capacitance * inductance);
 	double lambda = u/frequency;
-	delta_x = lambda/sec; //set space section size 0.01 m
-	delta_t = min(0.5*delta_x/u, 1/nyquist);
+	delta_x = x/xsec;
+	delta_t = 1/tsec;
+	max_iteration = tsec;
+	//check limit
+	if (lambda < 10*delta_x) { cerr << "x section too large\n"; }
+	if (delta_t >= 0.5*delta_x/u) { cerr << "doesn't fit courant limit\n";}
+	if (delta_t * nyquist > 1) { cerr << "doesn't fit nyquist limit\n";}
 	time = 0;
-	//using the twice of courant limit
-	//int gridi = 256;
-	gridi_bound = 10;
+	gridi_bound = xsec;
 	//initialize the memory space
 	V = new double[gridi_bound+1]();
 	I = new double[gridi_bound]();
