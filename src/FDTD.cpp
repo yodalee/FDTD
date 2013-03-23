@@ -10,7 +10,7 @@ FDTD::FDTD(double _c, double _l, double _f, int _sec, string source){
 	capacitance = _c;
 	inductance = _l;
 	frequency = _f;
-	Rs = 0.3;
+	Rs = 1;
 	Rl = 2;
 	max_iteration = 500;
 	initialStruct(_sec, source);
@@ -41,11 +41,6 @@ void FDTD::solve(){
 			cout << V[idx] << " ";
 		}
 		cout << endl;
-		//for (int idx = 0; idx < gridi_bound; ++idx) {
-		//	cout << I[idx] << " ";
-		//}
-		//cout << endl;
-		//cout << endl;
 		time += delta_t;
 	}
 };
@@ -92,7 +87,7 @@ void FDTD::initialStruct(int sec, string type){
 	time = 0;
 	//using the twice of courant limit
 	//int gridi = 256;
-	gridi_bound = 10;
+	gridi_bound = 16;
 	//initialize the memory space
 	V = new double[gridi_bound+1]();
 	I = new double[gridi_bound]();
