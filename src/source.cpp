@@ -21,7 +21,7 @@ double gaussian::set(const double _mean, const double frequency){
 	//mean = _mean;
 	var = 0.5/(pi*frequency);
 	mean = 4*var;
-	return 4*(4*2*frequency);
+	return 2*4*frequency;
 }
 
 double gaussian::get(double time){
