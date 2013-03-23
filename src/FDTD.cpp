@@ -6,13 +6,13 @@ using namespace std;
 
 #include "FDTD.h"
 
-FDTD::FDTD (double _c, double _l, double _f, double x, int N, double time, int t_sec, double rs, double rl, string source){
+FDTD::FDTD (double _c, double _l, double _f, double x, int N, double time, double rs, double rl, string source){
 	capacitance = _c;
 	inductance = _l;
 	frequency = _f;
 	Rs = rs;
 	Rl = rl;
-	initialStruct(x, N, time, t_sec, source);
+	initialStruct(x, N, time, source);
 }
 
 source* FDTD::createsource(string type){
@@ -73,29 +73,39 @@ void FDTD::solveone(const double* V1, const double* I1, double* V2, double* I2){
 // Structure limit:
 //	propagation speed u, time slice delta_t, space slice delta_x	
 //	1. wave length section: lambda > 10*delta_x
-//	2. courant limit: u * delta_t / delta_x <= 1
-//	detemine the delta_t
+//	2. courant limit: u * delta_t / delta_x <= 1 -> delta_t = 0.5*delta_x/u;
+//	3. nyquist theorem -> delta_t = 0.5 / nyquist;
+//	4. (1-2*Z/Rl|Rs) must within -1~1 -> delta_t = 0.5*capacitance*delta_x/min(Rs,Rl)
 //********************************************
-void FDTD::initialStruct(double x, int xsec, double t, int tsec, string type){
+void FDTD::initialStruct(double x, int xsec, double t, string type){
 	input = generate_source(type);
 	double nyquist = input->set(1.0, frequency);
 	//set the source
 	double u = 1 / sqrt(capacitance * inductance);
 	double lambda = u/frequency;
-	delta_x = x/xsec;
-	delta_t = t/tsec;
-	max_iteration = tsec;
-	//check limit
-	if (lambda < 10*delta_x) { cerr << "x section too large\n"; }
-	if (delta_t >= 0.5*delta_x/u) { cerr << "doesn't fit courant limit\n";}
-	if (delta_t * nyquist > 1) { cerr << "doesn't fit nyquist limit\n";}
-	time = 0;
-	//using the twice of courant limit
-	//int gridi = 256;
-	gridi_bound = xsec;
+	delta_x = x/lambda/xsec; //this force delta_x within constraint
+
+	double limit[3];
+	limit[0] = delta_x/u;
+	limit[1] = 1 / nyquist;
+	limit[2] = capacitance*delta_x*min(Rs,Rl);
+	max_iteration = ceil(t/(0.5*(*min_element(limit, limit+2))));
+	delta_t = t/max_iteration;
+
 	//initialize the memory space
+	time = 0;
+	gridi_bound = xsec;
 	V = new double[gridi_bound+1]();
 	I = new double[gridi_bound]();
 	_V = new double[gridi_bound+1]();
 	_I = new double[gridi_bound]();
+	
+	// output simulation information
+	cout << "start simulation: ";
+	cout << "simulation time to: " << t << " secs\n";
+	cout << "simulation line to: " << x << " meters\n";
+	cout << "x step: " << delta_x << "\n";
+	cout << "time step: " << delta_t << "\n";
+	cout << "input wave type: " << type << "\n";
+	cout << endl;
 };
