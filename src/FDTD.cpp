@@ -83,29 +83,34 @@ void FDTD::initialStruct(double x, int xsec, double t, string type){
 	//set the source
 	double u = 1 / sqrt(capacitance * inductance);
 	double lambda = u/frequency;
-	delta_x = x/lambda/xsec; //this force delta_x within constraint
+	gridi_bound = ceil((x/lambda)*xsec);
+	delta_x = x/gridi_bound; //this force delta_x within constraint
 
 	double limit[3];
 	limit[0] = delta_x/u;
 	limit[1] = 1 / nyquist;
 	limit[2] = capacitance*delta_x*min(Rs,Rl);
-	max_iteration = ceil(t/(0.5*(*min_element(limit, limit+2))));
-	delta_t = t/max_iteration;
+	delta_t = 0.5*(*min_element(limit, limit+2));
+	max_iteration = ceil(t/delta_t);
 
 	//initialize the memory space
 	time = 0;
-	gridi_bound = xsec;
 	V = new double[gridi_bound+1]();
 	I = new double[gridi_bound]();
 	_V = new double[gridi_bound+1]();
 	_I = new double[gridi_bound]();
 	
 	// output simulation information
-	cout << "start simulation: ";
-	cout << "simulation time to: " << t << " secs\n";
-	cout << "simulation line to: " << x << " meters\n";
-	cout << "x step: " << delta_x << "\n";
-	cout << "time step: " << delta_t << "\n";
-	cout << "input wave type: " << type << "\n";
+	//cout << "simulation time to: " << t << " secs\n";
+	//cout << "time step: " << delta_t << "\n";
+	//cout << "simulation line to: " << x << " meters\n";
+	//cout << "x step: " << delta_x << "\n";
+	//cout << "input wave type: " << type << "\n";
+	//cout << endl;
+	cout << t << "\n";
+	cout << delta_t << "\n";
+	cout << x << "\n";
+	cout << delta_x << "\n";
+	cout << type << "\n";
 	cout << endl;
 };
