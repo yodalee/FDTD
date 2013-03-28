@@ -78,19 +78,22 @@ void FDTD::solveone(const double* V1, const double* I1, double* V2, double* I2){
 //	4. (1-2*Z/Rl|Rs) must within -1~1 -> delta_t = 0.5*capacitance*delta_x/min(Rs,Rl)
 //********************************************
 void FDTD::initialStruct(double x, int xsec, double t, string type){
+	//calculate constant value
+	double u = 1 / sqrt(capacitance * inductance);
+	double period = 1/frequency;
+	double lambda = u*period;
+	//set the source
 	input = generate_source(type);
 	double nyquist = input->set(1.0, frequency);
-	//set the source
-	double u = 1 / sqrt(capacitance * inductance);
-	double lambda = u/frequency;
+	//set space section
 	gridi_bound = ceil((x/lambda)*xsec);
 	delta_x = x/gridi_bound; //this force delta_x within constraint
-
+	//set time section
 	double limit[3];
 	limit[0] = delta_x/u;
 	limit[1] = 1 / nyquist;
 	limit[2] = capacitance*delta_x*min(Rs,Rl);
-	delta_t = 0.5*(*min_element(limit, limit+2));
+	delta_t = 0.5*period/ceil(period/(*min_element(limit, limit+3)));
 	max_iteration = ceil(t/delta_t);
 
 	//initialize the memory space

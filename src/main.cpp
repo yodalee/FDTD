@@ -45,7 +45,7 @@ int main (int argc, char *argv[])
 	double capacitance = 1;
 	double inductance = 1;
 	double frequency = 1;
-	double xsize = 2.5;
+	double xsize = 0.25;
 	int xsection = 15;
 	double time = 10;
 	double rs = 1;
