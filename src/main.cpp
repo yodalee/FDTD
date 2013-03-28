@@ -34,7 +34,7 @@ using namespace std;
 int usage()
 {
 	cerr << "usage:\n FDTD -C capacitance -L inductance -f frequency\n";
-	cerr << "-X xsize(meter) -N xsection -t(sec.) -k timesection\n";
+	cerr << "-X xsize(meter) -N sec/lambda -t time\n";
 	cerr << "-s sourceR, -l loadR\n";
 	cerr << "-S source_name(single_frequency, gaussian)" << endl;
 	exit(EXIT_FAILURE);
@@ -47,8 +47,7 @@ int main (int argc, char *argv[])
 	double frequency = 1;
 	double xsize = 2.5;
 	int xsection = 15;
-	double time = 2;
-	int timesec = 120;
+	double time = 10;
 	double rs = 1;
 	double rl = 1;
 	string source = "single_frequency";
@@ -78,9 +77,6 @@ int main (int argc, char *argv[])
             case 't':		//set xsize
                 time = atof(optarg);
                 break;
-			case 'k':		//set lambda section number
-				timesec = atoi(optarg);
-				break;
             case 's':		//set xsize
                 rs = atof(optarg);
                 break;
@@ -96,7 +92,7 @@ int main (int argc, char *argv[])
         }
     }
 
-    FDTD fdtd (capacitance, inductance, frequency, xsize, xsection, time, timesec, rs, rl, source);
+    FDTD fdtd (capacitance, inductance, frequency, xsize, xsection, time, rs, rl, source);
     fdtd.solve ();
 
     return EXIT_SUCCESS;

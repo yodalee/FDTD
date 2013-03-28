@@ -4,7 +4,7 @@
 
 class FDTD {
 public:
-	FDTD (double _c, double _l, double _f, double x, int N, double time, int t_sec, double rs, double rl, string source);
+	FDTD (double _c, double _l, double _f, double x, int N, double time,  double rs, double rl, string source);
 	~FDTD(){
 		delete []_V;
 		delete []_I;
@@ -13,10 +13,9 @@ public:
 	}
 	source* generate_source(string type){ return createsource(type);}
 	source* createsource(string type);
-	void initialStruct(double x, int xsec, double time, int tsec, string type);
+	void initialStruct(double x, int xsec, double time, string type);
 	void solve();
 	void solveone(const double* V1, const double* I1, double* V2, double* I2);
-	void output();
 private:
 	double capacitance;
 	double inductance;
