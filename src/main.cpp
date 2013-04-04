@@ -38,7 +38,7 @@ int usage()
 	exit(EXIT_FAILURE);
 }
 
-void gensource(source* s, string type){
+void gensource(source* &s, string type){
 	if (type == "single_frequency") {
 		s = new single_frequency;
 	} else if (type == "gaussian") {
@@ -65,7 +65,7 @@ int main (int argc, char *argv[])
 				setting = optarg;
 				break;
 			case 's':		//set source type
-				setting = optarg;
+				type = optarg;
 				break;
             default:
 				cerr << "Wrong Command" << endl;
@@ -73,10 +73,11 @@ int main (int argc, char *argv[])
         }
     }
 
-    FDTD fdtd (setting);
+    FDTD fdtd;
 	source* s;
 	gensource(s, type);
 	fdtd.setSource(s);
+	fdtd.setStruct(setting);
     fdtd.solve ();
 
     return EXIT_SUCCESS;
