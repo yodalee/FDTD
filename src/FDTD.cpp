@@ -6,24 +6,8 @@ using namespace std;
 
 #include "FDTD.h"
 
-FDTD::FDTD (double _c, double _l, double _f, double x, int N, double time, double rs, double rl, string source){
-	capacitance = _c;
-	inductance = _l;
-	frequency = _f;
-	Rs = rs;
-	Rl = rl;
-	initialStruct(x, N, time, source);
-}
-
-source* FDTD::createsource(string type){
-	if (type == "gaussian") {
-		return (new gaussian);
-	} else if(type == "single_frequency") {
-		return (new single_frequency);
-	} else {
-		std::cerr << "invalid source option!\n";
-		exit(EXIT_FAILURE);
-	}
+FDTD::FDTD (string setting_file){
+	setStruct(setting_file);
 }
 
 //need a proper way to output
@@ -33,10 +17,10 @@ void FDTD::solve(){
 		cout << time << " ";
 		if (iterate%2 == 0) {
 			solveone(V,I,_V,_I); //calculate solution by V,I to _V,_I
-			for (int idx = 0; idx < gridi_bound+1; ++idx) { cout << _V[idx] << " "; }
+			for (int idx = 0; idx < Nx+1; ++idx) { cout << _V[idx] << " "; }
 		} else {
 			solveone(_V,_I,V,I); //calculate solution by V,I to _V,_I
-			for (int idx = 0; idx < gridi_bound+1; ++idx) { cout << V[idx] << " "; }
+			for (int idx = 0; idx < Nx+1; ++idx) { cout << V[idx] << " "; }
 		}
 		cout << endl;
 	}
@@ -65,10 +49,15 @@ void FDTD::solveone(const double* V1, const double* I1, double* V2, double* I2){
 };
 
 //********************************************
-// Function: initialStruct
+// Function: setStruct
 // Description: 
-//  initial structure parameter and check within limit
-//  initial memory
+//  parse setting file the get the parameter
+//********************************************
+
+//********************************************
+// Function: setSim
+// Description: get the max interesting frequency
+//  initial memory within limit
 //
 // Structure limit:
 //	propagation speed u, time slice delta_t, space slice delta_x	
@@ -77,43 +66,46 @@ void FDTD::solveone(const double* V1, const double* I1, double* V2, double* I2){
 //	3. nyquist theorem -> delta_t = 0.5 / nyquist;
 //	4. (1-2*Z/Rl|Rs) must within -1~1 -> delta_t = 0.5*capacitance*delta_x/min(Rs,Rl)
 //********************************************
-void FDTD::initialStruct(double x, int xsec, double t, string type){
-	//calculate constant value
-	double u = 1 / sqrt(capacitance * inductance);
-	double period = 1/frequency;
-	double lambda = u*period;
-	//set the source
-	input = generate_source(type);
+void FDTD::setSim(double max_frequency){
+}
+
+N, time
+void FDTD::setStruct(string setting_file){
+	//initial variable
+	int Nx;
+	Parser p;
+	p.parse(setting_file,
+			capacitance, inductance,
+			Rs, Rl, t)
 	double nyquist = input->set(1.0, frequency);
-	//set space section
-	gridi_bound = ceil((x/lambda)*xsec);
-	delta_x = x/gridi_bound; //this force delta_x within constraint
 	//set time section
 	double limit[3];
-	limit[0] = delta_x/u;
+	limit[0] = deltax/u;
 	limit[1] = 1 / nyquist;
-	limit[2] = capacitance*delta_x*min(Rs,Rl);
+	limit[2] = capacitance*deltax*min(Rs,Rl);
 	delta_t = 0.5*period/ceil(period/(*min_element(limit, limit+3)));
-	max_iteration = ceil(t/delta_t);
+	max_iteration = ceil(t/deltat);
 
 	//initialize the memory space
 	time = 0;
-	V = new double[gridi_bound+1]();
-	I = new double[gridi_bound]();
-	_V = new double[gridi_bound+1]();
-	_I = new double[gridi_bound]();
+	V = new double[Nx+1]();
+	I = new double[Nx]();
+	_V = new double[Nx+1]();
+	_I = new double[Nx]();
 	
-	// output simulation information
-	//cout << "simulation time to: " << t << " secs\n";
-	//cout << "time step: " << delta_t << "\n";
-	//cout << "simulation line to: " << x << " meters\n";
-	//cout << "x step: " << delta_x << "\n";
-	//cout << "input wave type: " << type << "\n";
+	//cout << t << "\n";
+	//cout << deltat << "\n";
+	//cout << deltax * Nx << "\n";
+	//cout << deltax << "\n";
+	//cout << type << "\n";
 	//cout << endl;
-	cout << t << "\n";
-	cout << delta_t << "\n";
-	cout << x << "\n";
-	cout << delta_x << "\n";
-	cout << type << "\n";
-	cout << endl;
 };
+
+//********************************************
+// Function: setSource
+// Description: 
+//  replace the source of the FDTD
+//********************************************
+void setSource(source* s){
+	input = s;
+}

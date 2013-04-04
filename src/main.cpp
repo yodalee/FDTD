@@ -30,61 +30,42 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 using namespace std;
 
 #include "FDTD.h"
+#include "source.h"
 
 int usage()
 {
-	cerr << "usage:\n FDTD -C capacitance -L inductance -f frequency\n";
-	cerr << "-X xsize(meter) -N sec/lambda -t time\n";
-	cerr << "-s sourceR, -l loadR\n";
-	cerr << "-S source_name(single_frequency, gaussian)" << endl;
+	cerr << "usage:\n FDTD -f setting_file -s sourcetype(gaussian single_frequency)" << endl;
 	exit(EXIT_FAILURE);
+}
+
+void gensource(source* s, string type){
+	if (type == "single_frequency") {
+		s = new single_frequency;
+	} else if (type == "gaussian") {
+		s = new gaussian;
+	} else {
+		cerr << "wrong source type name\n";
+		exit(EXIT_FAILURE);
+	}
 }
 
 int main (int argc, char *argv[])
 {
-	double capacitance = 1;
-	double inductance = 1;
-	double frequency = 1;
-	double xsize = 0.25;
-	int xsection = 15;
-	double time = 10;
-	double rs = 1;
-	double rl = 1;
-	string source = "single_frequency";
+	string type = "gaussian";
+	string setting = "config.txt";
     char c;
-    while((c=getopt(argc, argv, "hC:L:f:X:N:t:k:s:l:S:")) != -1)
+    while((c=getopt(argc, argv, "hf:s:")) != -1)
     {
         switch(c)
         {
             case 'h':		//show help
 				usage();
                 return 0;
-            case 'C':		//set structure capacitance
-				capacitance = atof(optarg);
-                break;
-            case 'L':		//set structure inductance
-                inductance = atof(optarg);
-                break;
-            case 'f':		//set simulation frequency
-                frequency = atof(optarg);
-                break;
-            case 'X':		//set xsize
-                xsize = atof(optarg);
-                break;
-			case 'N':		//set lambda section number
-				xsection = atoi(optarg);
+			case 'f':		//set source type
+				setting = optarg;
 				break;
-            case 't':		//set xsize
-                time = atof(optarg);
-                break;
-            case 's':		//set xsize
-                rs = atof(optarg);
-                break;
-            case 'l':		//set xsize
-                rl = atof(optarg);
-                break;
-			case 'S':		//set source type
-				source = optarg;
+			case 's':		//set source type
+				setting = optarg;
 				break;
             default:
 				cerr << "Wrong Command" << endl;
@@ -92,7 +73,10 @@ int main (int argc, char *argv[])
         }
     }
 
-    FDTD fdtd (capacitance, inductance, frequency, xsize, xsection, time, rs, rl, source);
+    FDTD fdtd (setting);
+	source* s;
+	gensource(s, type);
+	fdtd.setSource(s);
     fdtd.solve ();
 
     return EXIT_SUCCESS;
