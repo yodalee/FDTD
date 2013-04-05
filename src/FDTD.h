@@ -8,42 +8,45 @@
 
 class FDTD {
 public:
-	FDTD ();
-	~FDTD(){
-		delete []_V;
-		delete []_I;
-		delete []V;
-		delete []I;
-		delete []Z;
-		delete []G;
-	}
+	FDTD (){};
+	~FDTD();
 	void setStruct(string setting_file);
 	void setSource(source* s);
 	void solve();
-	void solveone(const double* V1, const double* I1, double* V2, double* I2);
+	void solveone();
 private:
 	void openfile(FILE* &fd, string filename);
+	void genCircle(FILE* &fd);
+	void genRect(FILE* &fd);
+	void updateHz();
+	void updateEx();
+	void updateEy();
 private:
 	//one time data
-	double max_frequency;
+	float max_frequency;
 	//structure
 	int Nx;
-	double deltax;
-	double deltat;
-	double Rs;
-	double Rl;
+	int Ny;
+	float xsize;
+	float ysize;
+	float deltax;
+	float deltay;
+	float deltat;
 	source* input;
 	
 	int max_iteration;
 	float time;
 	//array type data
-	double* Z;
-	double* G;
+	double* CEx;
+	double* CEy;
+	double* DHz;
 	//update data
-	double* V;
-	double* I;
-	double* _V;
-	double* _I;
+	double* Ex;
+	double* Ey;
+	double* Hz;
+	double* _Ex;
+	double* _Ey;
+	double* _Hz;
 };
 
 #endif
