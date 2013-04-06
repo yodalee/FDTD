@@ -28,7 +28,6 @@ void FDTD::solve(){
 		swap(Ex,_Ex);
 		swap(Ey,_Ey);
 		swap(Hz,_Hz);
-		cout << endl;
 	}
 };
 //********************************************
@@ -41,10 +40,9 @@ void FDTD::solve(){
 //  |          |
 //  |          |
 //  ----Ex1-----
-//  
 // Ex = new double[Nx+1][Ny+1](); //Nx index is idle
 // Ey = new double[Nx+1][Ny+1](); //Ny index is idle
-// Hz = new double[Nx+1][Ny+1]();	   //Nx and Ny index is idle
+// Hz = new double[Nx+1][Ny+1](); //Nx and Ny index is idle
 //********************************************
 void FDTD::solveone(){
 	updateHz();
@@ -105,10 +103,10 @@ void FDTD::setStruct(string setting_file){
 	//*************
 	FILE* fd;
 	openfile(fd, setting_file);
-	fscanf(fd, "%f %f", &xsize, &ysize);
-	fscanf(fd, "%f %d", &max_frequency, &lambda_sec);
-	fscanf(fd, "%f", &time);
-	fscanf(fd, "%d", &StrucNum);
+	fscanf(fd, "%f %f\n", &xsize, &ysize);
+	fscanf(fd, "%f %d\n", &max_frequency, &lambda_sec);
+	fscanf(fd, "%f\n", &time);
+	fscanf(fd, "%d\n", &StrucNum);
 	//calculate deltax size by the data above
 	//initial c, l memory
 	float period = 1/max_frequency;
@@ -136,7 +134,7 @@ void FDTD::setStruct(string setting_file){
 	fill(CEy, CEy + Nx*Ny, deltat/eps );
 	fill(DHz, DHz + Nx*Ny, deltat/mu );
 	for (int i = 0; i < StrucNum; ++i) {
-		fscanf(fd, "%c", &buf);
+		fscanf(fd, "%c\n", &buf);
 		if (buf == 'c') {  //create circle
 			genCircle(fd);
 		} else if (buf == 'r') {  //create rectangle
@@ -192,6 +190,7 @@ void FDTD::genCircle(FILE* &fd)
 		cerr << "wrong shape format" << endl;
 		exit(EXIT_FAILURE);
 	}
+	cout << "create a circle center " << cx << "," << cy << " radius " << radius << endl;
 	for (int i = 0; i < Nx; ++i) {
 		for (int j = 0; j < Ny; ++j) {
 			float posx = (i+0.5)*deltax;
@@ -224,6 +223,7 @@ void FDTD::genRect(FILE* &fd)
 		cerr << "wrong shape format" << endl;
 		exit(EXIT_FAILURE);
 	}
+	cout << "create a rectangle from " << px << "," << py << " to " << xu << "," << yu << endl;
 	//scan in the rectangle point
 	for (int i = roundf(px); i < roundf(xu); ++i) {
 		for (int j = roundf(py); j < roundf(yu); ++j) {
