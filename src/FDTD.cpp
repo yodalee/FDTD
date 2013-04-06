@@ -105,10 +105,10 @@ void FDTD::setStruct(string setting_file){
 	//*************
 	FILE* fd;
 	openfile(fd, setting_file);
-	fscanf(fd, "%f %f", &xsize, &ysize);
-	fscanf(fd, "%f %d", &max_frequency, &lambda_sec);
-	fscanf(fd, "%f", &time);
-	fscanf(fd, "%d", &StrucNum);
+	fscanf(fd, "%f %f\n", &xsize, &ysize);
+	fscanf(fd, "%f %d\n", &max_frequency, &lambda_sec);
+	fscanf(fd, "%f\n", &time);
+	fscanf(fd, "%d\n", &StrucNum);
 	//calculate deltax size by the data above
 	//initial c, l memory
 	float period = 1/max_frequency;
@@ -136,7 +136,7 @@ void FDTD::setStruct(string setting_file){
 	fill(CEy, CEy + Nx*Ny, deltat/eps );
 	fill(DHz, DHz + Nx*Ny, deltat/mu );
 	for (int i = 0; i < StrucNum; ++i) {
-		fscanf(fd, "%c", &buf);
+		fscanf(fd, "%c\n", &buf);
 		if (buf == 'c') {  //create circle
 			genCircle(fd);
 		} else if (buf == 'r') {  //create rectangle
@@ -182,14 +182,14 @@ void FDTD::openfile(FILE* &fd, string filename) {
 void FDTD::genCircle(FILE* &fd)
 {
 	float cx, cy, radius, permittivity, permeability;
-	fscanf(fd, "%f %f %f", &cx, &cy, &radius);
-	fscanf(fd, "%f %f", &permittivity, &permeability);
+	fscanf(fd, "%f %f %f\n", &cx, &cy, &radius);
+	fscanf(fd, "%f %f\n", &permittivity, &permeability);
 	float xu = cx+radius;
 	float xl = cx-radius;
 	float yu = cy+radius;
 	float yl = cy-radius;
 	if ((xu > xsize) or (yu > ysize) or (xl < 0) or (yl < 0)) {
-		cerr << "wrong shape format" << endl;
+		cerr << "circle shape format invalid" << endl;
 		exit(EXIT_FAILURE);
 	}
 	for (int i = 0; i < Nx; ++i) {
@@ -216,12 +216,12 @@ void FDTD::genCircle(FILE* &fd)
 void FDTD::genRect(FILE* &fd)
 {
 	float px, py, w, h, permittivity, permeability;
-	fscanf(fd, "%f %f %f %f", &px, &py, &w, &h);
-	fscanf(fd, "%f %f", &permittivity, &permeability);
+	fscanf(fd, "%f %f %f %f\n", &px, &py, &w, &h);
+	fscanf(fd, "%f %f\n", &permittivity, &permeability);
 	float xu = px+w;
 	float yu = py+h;
 	if ((xu > xsize) or (yu > ysize) or (px < 0) or (py < 0)) {
-		cerr << "wrong shape format" << endl;
+		cerr << "rect shape format invalid" << endl;
 		exit(EXIT_FAILURE);
 	}
 	//scan in the rectangle point
