@@ -28,14 +28,9 @@ void FDTD::solve(){
 	for (int iterate = 0; iterate < iteration; ++iterate) {
 		time += Dt;
 		solveone();
-		for (int i = 0; i < Nx+1; ++i) {
-			z[i] = m[i][idy].Ey;
-		}
 		g1.reset_plot();
+		for (int i = 0; i < Nx+1; ++i) { z[i] = m[i][idy].Ey; }
 		g1.plot_xy(x,z, "plot");
-		//cout << time << " ";
-		//for (int i = 0; i < Nx+1; ++i) { cout << m[i][idy].Ey << " "; }
-		//cout << endl;
 	} 
 	cerr << "press key:";
 	fgetc(stdin);
@@ -64,6 +59,7 @@ void FDTD::solveone(){
 			m[i+1][j+1].Ey = m[i+1][j+1].Ey - (Dt/(Ds*m[i+1][j+1].eps)) * (m[i+1][j+1].Hz - m[i][j+1].Hz);
 		}
 	}
+	//add source
 	int idx = 0.5*Nx;
 	double sright = input->get(time);
 	for (int j = 0; j < Ny; ++j) {
