@@ -4,7 +4,7 @@
 
 CC			= gcc
 CXX			= g++
-CXXFLAGS 	= -O0 -g -Wall
+CXXFLAGS 	= -g -Wall
 #CXXFLAGS	= -O2 -Wall
 INCLUDE 	= 
 TLIB 		= 

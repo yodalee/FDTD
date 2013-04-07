@@ -51,7 +51,7 @@ void gensource(source* &s, string type){
 
 int main (int argc, char *argv[])
 {
-	string type = "gaussian";
+	string type = "single_frequency";
 	string setting = "config.txt";
     char c;
     while((c=getopt(argc, argv, "hf:s:")) != -1)

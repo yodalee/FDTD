@@ -21,8 +21,6 @@ private:
 	void genRect(FILE* &fd);
 	void initialmesh(int Nx, int Ny);
 private:
-	//one time data
-	float max_frequency;
 	//structure
 	int Nx;
 	int Ny;
@@ -32,7 +30,7 @@ private:
 	float Dt;
 	source* input;
 	
-	int max_iteration;
+	int iteration;
 	float time;
 	
 	mesh** m;

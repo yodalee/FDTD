@@ -2,9 +2,12 @@
 #include <cmath>
 #include <cstdlib>
 #include <algorithm>
+#include <cstdio>
+#include <vector>
 using namespace std;
 
 #include "FDTD.h"
+#include "gnuplot_i.hpp"
 
 FDTD::~FDTD () {
 	for (int i = 0; i < Ny+1; ++i) {
@@ -13,35 +16,58 @@ FDTD::~FDTD () {
 	delete[] m;
 }
 
-//need a proper way to output
 void FDTD::solve(){
-	for (int iterate = 0; iterate < max_iteration; ++iterate) {
-		time = iterate*Dt;
-		cout << time << " ";
+	Gnuplot g1("lines");
+	g1.reset_plot();
+	g1.set_yrange(-10,10);
+	vector<double> x(Nx+1), y(Nx+1);
+	vector<double> z(Nx+1);
+	for (int i = 0; i < Nx+1; ++i) { x[i] = i; }
+	for (int i = 0; i < Ny+1; ++i) { y.push_back((double)i); }
+	int idy = 0.5*Ny;
+	for (int iterate = 0; iterate < iteration; ++iterate) {
+		time += Dt;
 		solveone();
-		//move data
-	}
+		for (int i = 0; i < Nx+1; ++i) {
+			z[i] = m[i][idy].Ey;
+		}
+		g1.plot_xy(x,z, "plot");
+		g1.reset_plot();
+		//cout << time << " ";
+		//for (int i = 0; i < Nx+1; ++i) { cout << m[i][idy].Ey << " "; }
+		//cout << endl;
+	} 
+	cerr << "press key:";
+	fgetc(stdin);
+
 };
+
 //********************************************
 // Function: solveone
 // Description: update Ex, Ey, Hz
-//  ----Ex2-----
-//  |          |
-//  |          |
-// Ey1   Hz   Ey2
-//  |          |
-//  |          |
+// the mesh[1][1] of Ex, Ey, Hz define as below
 //  ----Ex1-----
-//  [Nx+1][Ny+1] row and column are idle for Hz, won't update
+//  |          |
+//  |          |
+//  |   Hz1   Ey1
+//  |          |
+//  |          |
+//  ------------
+//  mesh[Nx+1][Ny+1] Ex Ey idle for Hz, won't update
 //********************************************
 void FDTD::solveone(){
 	for (int i = 0; i < Nx; ++i) {
 		for (int j = 0; j < Ny; ++j) {
-			m[i][j].Hz = m[i][j].Hz + Dt/Ds/m[i][j].eps*
+			m[i][j].Hz = m[i][j].Hz + Dt/(Ds/m[i][j].mu) *
 			   ( m[i][j+1].Ex - m[i][j].Ex + m[i+1][j].Ey - m[i][j].Ey);
-			m[i][j].Ex = m[i][j].Ex + Dt/Ds/m[i][j].eps * (m[i][j+1].Hz - m[i][j].Hz);
-			m[i][j].Ey = m[i][j].Ey + Dt/Ds/m[i][j].eps * (m[i+1][j].Hz - m[i][j].Hz);
+			m[i][j].Ex = m[i][j].Ex + Dt/(Ds/m[i][j].eps) * (m[i][j+1].Hz - m[i][j].Hz);
+			m[i][j].Ey = m[i][j].Ey + Dt/(Ds/m[i][j].eps) * (m[i+1][j].Hz - m[i][j].Hz);
 		}
+	}
+	int idx = 0.5*Nx;
+	double sright = input->get(time);
+	for (int j = 0; j < Ny; ++j) {
+		m[idx][j].Hz += (Dt/Ds/m[idx][j].mu)*sright;
 	}
 };
 
@@ -60,13 +86,14 @@ void FDTD::solveone(){
 void FDTD::setStruct(string setting_file){
 	int lambda_sec; //lambda/Dx default 10
 	int StrucNum;
-	char buf;
+	//char buf;
+	float max_frequency;
 	//*************
 	FILE* fd;
 	openfile(fd, setting_file);
 	fscanf(fd, "%f %f\n", &xsize, &ysize);
 	fscanf(fd, "%f %d\n", &max_frequency, &lambda_sec);
-	fscanf(fd, "%f\n", &time);
+	fscanf(fd, "%f %d\n", &time, &iteration);
 	fscanf(fd, "%d\n", &StrucNum);
 	fscanf(fd, "source: ");
 	//calculate Ds size by the data above
@@ -77,14 +104,13 @@ void FDTD::setStruct(string setting_file){
 	Nx = ceil(xsize/Ds);//set space section
 	Ny = ceil(ysize/Ds);
 
-	double nyquist = input->set(1.0, max_frequency);
+	double nyquist = input->set(400, max_frequency);
 	//set time section
-	double limit[2];
+	double limit[3];
 	limit[0] = Ds/(cspeed*sqrt(2));
 	limit[1] = 1 / nyquist;
-	Dt = 0.5*period/ceil(period/(min(limit[0], limit[1])));
-	max_iteration = ceil(time/Dt);
-
+	limit[2] = Ds*eps0;
+	Dt = 0.5*period/ceil(period/(*min_element(limit, limit+2)));
 	time = 0;
 	//initialize the memory space
 	initialmesh(Nx, Ny);
@@ -110,7 +136,7 @@ void FDTD::setStruct(string setting_file){
 void FDTD::initialmesh(int Nx, int Ny)
 {
 	m = new mesh*[Nx+1];
-	for (int i = 0; i < Nx; ++i) {
+	for (int i = 0; i < Nx+1; ++i) {
 		m[i] = new mesh[Ny+1];
 	}
 }
