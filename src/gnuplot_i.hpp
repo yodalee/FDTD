@@ -49,7 +49,7 @@
 #elif defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
 //all UNIX-like OSs (Linux, *BSD, MacOSX, Solaris, ...)
  #include <unistd.h>            // for access(), mkstemp()
- #define GP_MAX_TMP_FILES  4096
+ #define GP_MAX_TMP_FILES  1024
 #else
  #error unsupported or unknown operating system
 #endif
@@ -961,7 +961,7 @@ Gnuplot::~Gnuplot()
 //
 Gnuplot& Gnuplot::reset_plot()
 {
-    //remove_tmpfiles();
+    remove_tmpfiles();
 
     nplots = 0;
 

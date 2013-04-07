@@ -21,9 +21,4 @@ struct mesh {
 		double eps;
 };
 
-typedef struct data_mesh data_mesh;
-struct data_mesh {
-	double Ex, Ey, Hz;
-};
-
 #endif

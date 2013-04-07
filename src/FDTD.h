@@ -24,8 +24,6 @@ private:
 	//structure
 	int Nx;
 	int Ny;
-	float xsize;
-	float ysize;
 	float Ds;
 	float Dt;
 	source* input;
