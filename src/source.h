@@ -27,7 +27,7 @@ public:
 class single_frequency : public source {
 public:
 	single_frequency (){};
-	double get(double time);
+	double get(const double time);
 	double set(const double magnitude, const double frequency);
 private:
 	double mag;
@@ -42,7 +42,22 @@ private:
 class gaussian : public source {
 public:
 	gaussian (){};
-	double get(double time);
+	double get(const double time);
+	double set(const double mag, const double freq);
+private:
+	double mean;
+	double var;
+};
+
+//********************************************
+// Class: degaussian
+// Description: generate derivative gaussian
+//  (-4/(sqrt(2*pi)*sigma)*(t-m)*exp^(-(t-m)^2/2sigma^2)))
+//********************************************
+class deri_gaussian : public source {
+public:
+	deri_gaussian (){};
+	double get(const double time);
 	double set(const double mag, const double freq);
 private:
 	double mean;
