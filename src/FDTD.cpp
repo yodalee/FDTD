@@ -64,14 +64,14 @@ void FDTD::solve(){
 void FDTD::solveone(){
 	for (int i = 0; i < Nx; ++i) {
 		for (int j = 0; j < Ny; ++j) {
-			m[i][j].Hz = m[i][j].Hz + (Dt/(Ds*m[i][j].mu)) *
+			m[i][j].Hz = m[i][j].Hz + m[i][j].DH/*(Dt/(Ds*m[i][j].mu))*/ *
 			   (m[i][j+1].Ex - m[i][j].Ex - m[i+1][j].Ey + m[i][j].Ey);
 		}
 	}
 	for (int i = 1; i < Nx; ++i) {
 		for (int j = 1; j < Ny; ++j) {
-			m[i][j].Ex = m[i][j].Ex + (Dt/(Ds*m[i][j].eps)) * (m[i][j].Hz - m[i][j-1].Hz);
-			m[i][j].Ey = m[i][j].Ey - (Dt/(Ds*m[i][j].eps)) * (m[i][j].Hz - m[i-1][j].Hz);
+			m[i][j].Ex = m[i][j].Ex + m[i][j].CE/*(Dt/(Ds*m[i][j].eps))*/ * (m[i][j].Hz - m[i][j-1].Hz);
+			m[i][j].Ey = m[i][j].Ey - m[i][j].CE/*(Dt/(Ds*m[i][j].eps))*/ * (m[i][j].Hz - m[i-1][j].Hz);
 		}
 	}
 	//add source
@@ -79,8 +79,8 @@ void FDTD::solveone(){
 	double Esource = input->get(time);
 	double Hsource = Esource/imp0;
 	for (int j = 0; j < Ny; ++j) {
-		m[idx][j].Hz += (Dt/(Ds*m[idx][j].mu))*Esource;
-		m[idx][j].Ey += (Dt/(Ds*m[idx][j].eps))*Hsource;
+		m[idx][j].Hz	+= m[idx][j].DH/*(Dt/(Ds*m[idx][j].mu))*/*Esource;
+		m[idx+1][j].Ey	+= m[idx+1][j].CE/*(Dt/(Ds*m[idx][j].eps))*/*Hsource;
 	}
 };
 
@@ -124,6 +124,7 @@ void FDTD::setStruct(string setting_file){
 	//limit[2] = Ds*eps0;
 	//Dt = 0.5*period/ceil(period/(*min_element(limit, limit+2)));
 	Dt = Ds/(cspeed*sqrt(2));
+	mesh::setstatic(Ds, Dt);
 	time = 0;
 	//initialize the memory space
 	initialmesh(Nx, Ny);
