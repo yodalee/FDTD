@@ -1887,9 +1887,9 @@ std::string Gnuplot::create_tmpfile(std::ofstream &tmp)
 {
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
-    char name[] = "gnuplotiXXXXXX"; //tmp file in working directory
+    char name[] = "gnuplotiXXXXXXXXX"; //tmp file in working directory
 #elif defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
-    char name[] = "/tmp/gnuplotiXXXXXX"; // tmp file in /tmp
+    char name[] = "/tmp/gnuplotiXXXXXXXXX"; // tmp file in /tmp
 #endif
 
     //

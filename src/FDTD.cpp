@@ -20,17 +20,28 @@ void FDTD::solve(){
 	Gnuplot g1("lines");
 	g1.reset_plot();
 	g1.set_yrange(-10,10);
-	vector<double> x(Nx+1), y(Nx+1);
-	vector<double> z(Nx+1);
-	for (int i = 0; i < Nx+1; ++i) { x[i] = i; }
-	for (int i = 0; i < Ny+1; ++i) { y[i] = i; }
-	int idy = 0.5*Ny;
+	vector<double> x((Nx+1)), y((Nx+1)*(Ny+1));
+	vector<double> z((Nx+1));
+	for (int i = 0; i < Nx+1; ++i) {
+		for (int j = 0; j < Ny+1; ++j) {
+			 x[i*(1)] = i;
+			 y[i*(Ny+1)+j] = j;
+		}
+	}
+	//int idy = 0.5*Ny;
 	for (int iterate = 0; iterate < iteration; ++iterate) {
 		time += Dt;
 		solveone();
-		g1.reset_plot();
-		for (int i = 0; i < Nx+1; ++i) { z[i] = m[i][idy].Ey; }
-		g1.plot_xy(x,z, "plot");
+		//if ((iterate&31) == 0) {
+			g1.reset_plot();
+			for (int i = 0; i < Nx+1; ++i) {
+				//for (int j = 0; j < Ny+h; ++j) {
+					z[i*(1)] = m[i][Ny/2].Ey;
+				//}
+			}
+			//g1.set_style("image");
+			g1.plot_xy(x,z, "plot");
+		//}
 	} 
 	cerr << "press key:";
 	fgetc(stdin);
@@ -55,15 +66,21 @@ void FDTD::solveone(){
 		for (int j = 0; j < Ny; ++j) {
 			m[i][j].Hz = m[i][j].Hz + (Dt/(Ds*m[i][j].mu)) *
 			   (m[i][j+1].Ex - m[i][j].Ex - m[i+1][j].Ey + m[i][j].Ey);
-			m[i+1][j+1].Ex = m[i+1][j+1].Ex + (Dt/(Ds*m[i+1][j+1].eps)) * (m[i+1][j+1].Hz - m[i+1][j].Hz);
-			m[i+1][j+1].Ey = m[i+1][j+1].Ey - (Dt/(Ds*m[i+1][j+1].eps)) * (m[i+1][j+1].Hz - m[i][j+1].Hz);
+		}
+	}
+	for (int i = 1; i < Nx; ++i) {
+		for (int j = 1; j < Ny; ++j) {
+			m[i][j].Ex = m[i][j].Ex + (Dt/(Ds*m[i][j].eps)) * (m[i][j].Hz - m[i][j-1].Hz);
+			m[i][j].Ey = m[i][j].Ey - (Dt/(Ds*m[i][j].eps)) * (m[i][j].Hz - m[i-1][j].Hz);
 		}
 	}
 	//add source
 	int idx = 0.5*Nx;
-	double sright = input->get(time);
+	double Esource = input->get(time);
+	double Hsource = Esource/imp0;
 	for (int j = 0; j < Ny; ++j) {
-		m[idx][j].Hz += (Dt/(Ds*m[idx][j].mu))*sright;
+		m[idx][j].Hz += (Dt/(Ds*m[idx][j].mu))*Esource;
+		m[idx][j].Ey += (Dt/(Ds*m[idx][j].eps))*Hsource;
 	}
 };
 
@@ -106,8 +123,7 @@ void FDTD::setStruct(string setting_file){
 	//limit[1] = 1 / nyquist;
 	//limit[2] = Ds*eps0;
 	//Dt = 0.5*period/ceil(period/(*min_element(limit, limit+2)));
-	//Dt = Ds/(cspeed*sqrt(2));
-	Dt = 0.001;
+	Dt = Ds/(cspeed*sqrt(2));
 	time = 0;
 	//initialize the memory space
 	initialmesh(Nx, Ny);

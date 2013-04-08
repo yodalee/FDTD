@@ -16,6 +16,9 @@ struct mesh {
 		mesh(double m = mu0, double e = eps0);
 		void setMaterial(double m, double e, double sigma=0);
 	public:
+		static void setstatic(double Ds, double Dt);
+		static double Ds;
+		static double Dt;
 		double Ex, Ey, Hz;
 		double mu;
 		double eps;
