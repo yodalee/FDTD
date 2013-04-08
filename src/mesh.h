@@ -20,8 +20,8 @@ struct mesh {
 		static double Ds;
 		static double Dt;
 		double Ex, Ey, Hz;
-		double mu;
-		double eps;
+		double DH;
+		double CE;
 };
 
 #endif

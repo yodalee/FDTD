@@ -31,6 +31,7 @@ void FDTD::solve(){
 	//int idy = 0.5*Ny;
 	for (int iterate = 0; iterate < iteration; ++iterate) {
 		time += Dt;
+		cout << iterate << endl;
 		solveone();
 		//if ((iterate&31) == 0) {
 			g1.reset_plot();
@@ -56,22 +57,23 @@ void FDTD::solve(){
 //  |          |
 //  |          |
 // Ey1  Hz1    |
-//  |          |
+// CE   DH     |
 //  |          |
 //  ----Ex1-----
+//		CE
 //  mesh[Nx+1][Ny+1] Ex Ey idle for Hz, won't update
 //********************************************
 void FDTD::solveone(){
 	for (int i = 0; i < Nx; ++i) {
 		for (int j = 0; j < Ny; ++j) {
-			m[i][j].Hz = m[i][j].Hz + (Dt/(Ds*m[i][j].mu)) *
+			m[i][j].Hz = m[i][j].Hz + m[i][j].DH *
 			   (m[i][j+1].Ex - m[i][j].Ex - m[i+1][j].Ey + m[i][j].Ey);
 		}
 	}
 	for (int i = 1; i < Nx; ++i) {
 		for (int j = 1; j < Ny; ++j) {
-			m[i][j].Ex = m[i][j].Ex + (Dt/(Ds*m[i][j].eps)) * (m[i][j].Hz - m[i][j-1].Hz);
-			m[i][j].Ey = m[i][j].Ey - (Dt/(Ds*m[i][j].eps)) * (m[i][j].Hz - m[i-1][j].Hz);
+			m[i][j].Ex = m[i][j].Ex + m[i][j].CE * (m[i][j].Hz - m[i][j-1].Hz);
+			m[i][j].Ey = m[i][j].Ey - m[i][j].CE * (m[i][j].Hz - m[i-1][j].Hz);
 		}
 	}
 	//add source
@@ -79,8 +81,8 @@ void FDTD::solveone(){
 	double Esource = input->get(time);
 	double Hsource = Esource/imp0;
 	for (int j = 0; j < Ny; ++j) {
-		m[idx][j].Hz += (Dt/(Ds*m[idx][j].mu))*Esource;
-		m[idx][j].Ey += (Dt/(Ds*m[idx][j].eps))*Hsource;
+		m[idx][j].Hz	+= m[idx][j].DH*Esource;
+		m[idx+1][j].Ey	+= m[idx+1][j].CE*Hsource;
 	}
 };
 
@@ -99,7 +101,7 @@ void FDTD::solveone(){
 void FDTD::setStruct(string setting_file){
 	int lambda_sec; //lambda/Dx default 10
 	int StrucNum;
-	//char buf;
+	char buf;
 	float max_frequency;
 	//*************
 	FILE* fd;
@@ -110,11 +112,6 @@ void FDTD::setStruct(string setting_file){
 	fscanf(fd, "%d\n", &iteration);
 	fscanf(fd, "%d\n", &StrucNum);
 	fscanf(fd, "source: ");
-	//calculate Ds size by the data above
-	//initial c, l memory
-	//float period = 1/max_frequency;
-	//float lambda = cspeed*period;
-	//Ds = lambda/lambda_sec;
 
 	double nyquist = input->set(7, max_frequency);
 	////set time section
@@ -124,20 +121,21 @@ void FDTD::setStruct(string setting_file){
 	//limit[2] = Ds*eps0;
 	//Dt = 0.5*period/ceil(period/(*min_element(limit, limit+2)));
 	Dt = Ds/(cspeed*sqrt(2));
+	mesh::setstatic(Ds, Dt);
 	time = 0;
 	//initialize the memory space
 	initialmesh(Nx, Ny);
-	//for (int i = 0; i < StrucNum; ++i) {
-	//	fscanf(fd, "%c\n", &buf);
-	//	if (buf == 'c') {  //create circle
-	//		genCircle(fd);
+	for (int i = 0; i < StrucNum; ++i) {
+		fscanf(fd, "%c\n", &buf);
+		if (buf == 'c') {  //create circle
+			genCircle(fd);
 	//	} else if (buf == 'r') {  //create rectangle
 	//		genRect(fd);
 	//	} else {
 	//		cerr << "wrong shape format" << endl;
 	//		exit(EXIT_FAILURE);
-	//	}
-	//}
+		}
+	}
 	fclose(fd);
 	//need a better way to represent source
 };
@@ -179,33 +177,27 @@ void FDTD::openfile(FILE* &fd, string filename) {
 //********************************************
 void FDTD::genCircle(FILE* &fd)
 {
-	//float cx, cy, radius, permittivity, permeability;
-	//fscanf(fd, "%f %f %f\n", &cx, &cy, &radius);
-	//fscanf(fd, "%f %f\n", &permittivity, &permeability);
-	//float xu = cx+radius;
-	//float xl = cx-radius;
-	//float yu = cy+radius;
-	//float yl = cy-radius;
-	//if ((xu > xsize) or (yu > ysize) or (xl < 0) or (yl < 0)) {
-	//	cerr << "circle shape format invalid" << endl;
-	//	exit(EXIT_FAILURE);
-	//}
-	//cout << "create a circle center " << cx << "," << cy << " radius " << radius << endl;
-	//for (int i = 0; i < Nx; ++i) {
-	//	for (int j = 0; j < Ny; ++j) {
-	//		float posx = (i+0.5)*Dx;
-	//		float posy = j*Dy;
-	//		int idx = i*Ny + j;
-	//		if ((posx-cx)*(posx-cx) + (posy-cy)*(posy-cy) <= radius ) {
-	//			CEx[idx] = 0;
-	//		}
-	//		posx = i*Dx;
-	//		posy = (j+0.5)*Dy;
-	//		if ((posx-cx)*(posx-cx) + (posy-cy)*(posy-cy) <=radius ) {
-	//			CEy[idx] = 0;
-	//		}
-	//	}
-	//}
+	int cx, cy;
+	float radius, eps, mu;
+	fscanf(fd, "%d %d %f\n", &cx, &cy, &radius);
+	fscanf(fd, "%f %f\n", &eps, &mu);
+	int r = floor(radius/Ds);
+	int xu = cx+r;
+	int xl = cx-r;
+	int yu = cy+r;
+	int yl = cy-r;
+	if ((xu > Nx) or (yu > Ny) or (xl < 0) or (yl < 0)) {
+		cerr << "circle shape format invalid" << endl;
+		exit(EXIT_FAILURE);
+	}
+	cout << "create a circle center " << cx << "," << cy << " radius " << radius << endl;
+	for (int i = 0; i < Nx+1; ++i) {
+		for (int j = 0; j < Ny+1; ++j) {
+			if ((cx-i)*(cx-i) + (cy-j)*(cy-j) <= radius*radius) {
+				m[i][j].setMaterial(mu, eps);
+			}
+		}
+	}
 }
 
 //********************************************
