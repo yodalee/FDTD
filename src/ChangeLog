@@ -8,3 +8,10 @@ FDTD 0.1.2 (三月 17, 2013):
 
 FDTD 0.1.3 (三月 24, 2013):
 	* Add: auto determine x step and t step
+
+FDTD 0.1.4 (三月 28, 2013):
+	* 1D simulation done
+
+FDTD 0.1.5 (四月 8, 2013):
+	* Add:  replace double array with mesh
+	* Add:  apply DH, CE to accelarate

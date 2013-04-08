@@ -34,6 +34,7 @@ void FDTD::solve(){
 		cout << iterate << endl;
 		solveone();
 		//if ((iterate&31) == 0) {
+			usleep(10000);
 			g1.reset_plot();
 			for (int i = 0; i < Nx+1; ++i) {
 				//for (int j = 0; j < Ny+h; ++j) {
@@ -64,6 +65,7 @@ void FDTD::solve(){
 //  mesh[Nx+1][Ny+1] Ex Ey idle for Hz, won't update
 //********************************************
 void FDTD::solveone(){
+	//update
 	for (int i = 0; i < Nx; ++i) {
 		for (int j = 0; j < Ny; ++j) {
 			m[i][j].Hz = m[i][j].Hz + m[i][j].DH *
@@ -78,9 +80,10 @@ void FDTD::solveone(){
 	}
 	//add source
 	int idx = 0.5*Nx;
+	int idy = 0.5*Ny;
 	double Esource = input->get(time);
 	double Hsource = Esource/imp0;
-	for (int j = 0; j < Ny; ++j) {
+	for (int j = 1; j < Ny; ++j) {
 		m[idx][j].Hz	+= m[idx][j].DH*Esource;
 		m[idx+1][j].Ey	+= m[idx+1][j].CE*Hsource;
 	}
@@ -114,17 +117,12 @@ void FDTD::setStruct(string setting_file){
 	fscanf(fd, "source: ");
 
 	double nyquist = input->set(7, max_frequency);
-	////set time section
-	//double limit[3];
-	//limit[0] = Ds/(cspeed*sqrt(2));
-	//limit[1] = 1 / nyquist;
-	//limit[2] = Ds*eps0;
-	//Dt = 0.5*period/ceil(period/(*min_element(limit, limit+2)));
 	Dt = Ds/(cspeed*sqrt(2));
 	mesh::setstatic(Ds, Dt);
 	time = 0;
 	//initialize the memory space
 	initialmesh(Nx, Ny);
+	//initial PML structure
 	for (int i = 0; i < StrucNum; ++i) {
 		fscanf(fd, "%c\n", &buf);
 		if (buf == 'c') {  //create circle
