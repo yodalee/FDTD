@@ -14,7 +14,8 @@ typedef struct mesh mesh;
 struct mesh {
 	public:
 		mesh(double m = mu0, double e = eps0);
-		void setMaterial(double m, double e, double sigx=0, double sigy=0);
+		void setMaterial(double m, double e,
+			double sigx=0, double sigy=0,double sigx_=0, double sigy_=0);
 	public:
 		static void setstatic(double Ds, double Dt);
 		static double Ds;

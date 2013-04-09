@@ -11,23 +11,21 @@ mesh::mesh(double m, double e){
 	setMaterial(m,e);
 }
 
-void mesh::setMaterial(
-		double m, double e, double sigx, double sigy){
-	double term=0;
-	double sigx_ = sigx * imp0 * imp0;
-	double sigy_ = sigy * imp0 * imp0;
+void mesh::setMaterial(double m, double e,
+		double sigx, double sigx_,double sigy, double sigy_){
+	double term = 0;
 	term=0.5*(sigy*Dt)/(e);
-	CEx1 = (1-term)/(1+term);
-	CEx2 = (Dt/(e*Ds))/(1+term);
+	CEx1 = (1.0-term)/(1.0+term);
+	CEx2 = (Dt/(e*Ds))/(1.0+term);
 	term=0.5*(sigx*Dt)/(e);
-	CEy1 = (1-term)/(1+term);
-	CEy2 = (Dt/(e*Ds))/(1+term);
+	CEy1 = (1.0-term)/(1.0+term);
+	CEy2 = (Dt/(e*Ds))/(1.0+term);
 	term=0.5*(sigx_*Dt)/(m);
-	DHx1 = (1-term)/(1+term);
-	DHx2 = (Dt/(m*Ds))/(1+term);
+	DHx1 = (1.0-term)/(1.0+term);
+	DHx2 = (Dt/(m*Ds))/(1.0+term);
 	term=0.5*(sigy_*Dt)/(m);
-	DHy1 = (1-term)/(1+term);
-	DHy2 = (Dt/(m*Ds))/(1+term);
+	DHy1 = (1.0-term)/(1.0+0.5*(sigx_*Dt)/(m));
+	DHy2 = (Dt/(m*Ds))/(1.0+term);
 }
 
 void mesh::setstatic(double _Ds, double _Dt){
