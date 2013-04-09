@@ -2,6 +2,7 @@
 
 double mesh::Ds = 0;
 double mesh::Dt = 0;
+//void mesh::setstatic(double, double);
 
 mesh::mesh(double m, double e){
 	Ex = 0;

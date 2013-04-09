@@ -15,3 +15,4 @@ FDTD 0.1.4 (三月 28, 2013):
 FDTD 0.1.5 (四月 8, 2013):
 	* Add:  replace double array with mesh
 	* Add:  apply DH, CE to accelarate
+	* Add:  Apply PML as the absorbing boundary condition
