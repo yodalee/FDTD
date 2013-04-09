@@ -132,6 +132,14 @@ void FDTD::setStruct(string setting_file){
 	int layer = 10;
 	double inv = 1.0/layer;
 	double sigma_max = 0.8*(PMLm+1)/(imp0*Ds);
+	time = 0;
+	//initialize the memory space
+	initialmesh(Nx, Ny);
+	//initial PML structure
+	int PMLm = 2;
+	int layer = 10;
+	double inv = 1.0/layer;
+	double sigma_max = 0.8*(PMLm+1)/(imp0*Ds);
 	//top bottom
 	for (int i = 0; i < Nx+1; ++i) {
 		for (int j = 0; j < layer; ++j) {
