@@ -34,7 +34,7 @@ void FDTD::solve(){
 		cout << iterate << endl;
 		solveone();
 		//if ((iterate&31) == 0) {
-			usleep(10000);
+			usleep(1000);
 			g1.reset_plot();
 			for (int i = 0; i < Nx+1; ++i) {
 				//for (int j = 0; j < Ny+h; ++j) {
@@ -68,24 +68,29 @@ void FDTD::solveone(){
 	//update
 	for (int i = 0; i < Nx; ++i) {
 		for (int j = 0; j < Ny; ++j) {
-			m[i][j].Hz = m[i][j].Hz + m[i][j].DH *
-			   (m[i][j+1].Ex - m[i][j].Ex - m[i+1][j].Ey + m[i][j].Ey);
+			m[i][j].Hzx = m[i][j].DHx1*m[i][j].Hzx - m[i][j].DHx2 *
+			   (m[i+1][j].Ey - m[i][j].Ey);
+			m[i][j].Hzy = m[i][j].DHy1*m[i][j].Hzy + m[i][j].DHy2 *
+			   (m[i][j+1].Ex - m[i][j].Ex);
 		}
 	}
 	for (int i = 1; i < Nx; ++i) {
 		for (int j = 1; j < Ny; ++j) {
-			m[i][j].Ex = m[i][j].Ex + m[i][j].CE * (m[i][j].Hz - m[i][j-1].Hz);
-			m[i][j].Ey = m[i][j].Ey - m[i][j].CE * (m[i][j].Hz - m[i-1][j].Hz);
+			m[i][j].Ex = m[i][j].CEx1*m[i][j].Ex + m[i][j].CEx2 * (m[i][j].Hzx + m[i][j].Hzy - m[i][j-1].Hzx - m[i][j-1].Hzy);
+			m[i][j].Ey = m[i][j].CEy1*m[i][j].Ey - m[i][j].CEy2 * (m[i][j].Hzx + m[i][j].Hzy - m[i-1][j].Hzx - m[i-1][j].Hzy);
 		}
 	}
-	//add source
-	int idx = 0.5*Nx;
-	int idy = 0.5*Ny;
-	double Esource = input->get(time);
-	double Hsource = Esource/imp0;
-	for (int j = 1; j < Ny; ++j) {
-		m[idx][j].Hz	+= m[idx][j].DH*Esource;
-		m[idx+1][j].Ey	+= m[idx+1][j].CE*Hsource;
+	//impulse
+	if (time < 1e-9) {
+		//add source
+		int idx = 0.5*Nx;
+		int idy = 0.5*Ny;
+		double Esource = input->get(time);
+		double Hsource = input->get(time+0.5*Dt)/imp0;
+		for (int j = 1; j < Ny; ++j) {
+			m[idx][j].Hzx	+= m[idx][j].DHx2*Esource;
+			m[idx+1][j].Ey	+= m[idx+1][j].CEy2*Hsource;
+		}
 	}
 };
 
@@ -123,6 +128,23 @@ void FDTD::setStruct(string setting_file){
 	//initialize the memory space
 	initialmesh(Nx, Ny);
 	//initial PML structure
+	int m = 4;
+	int layer = 10;
+	double inv = 1/layer;
+	double sigma_max = 0.8*(m+1)/(imp0*Ds);
+	//for (int i = 0; i < Nx+1; ++i) {
+	//	for (int j = 0; j < layer; ++j) {
+	//		m[i][j].setMaterial(mu0,eps0,pow((layer-j)*inv,m)*sigma_max);
+	//		m[i][Ny-j].setMaterial(mu0,eps0,pow((layer-j)*inv,m)*sigma_max);
+	//	}
+	//}
+	//for (int i = 0; i < layer; ++i) {
+	//	for (int j = 0; j < Ny+1; ++j) {
+	//		m[i][j].setMaterial(mu0,eps0,0,pow((layer-i)*inv,m)*sigma_max);
+	//		m[Nx-i][j].setMaterial(mu0,eps0,0,pow((layer-i)*inv,m)*sigma_max);
+	//	}
+	//}
+	//initial special structure
 	for (int i = 0; i < StrucNum; ++i) {
 		fscanf(fd, "%c\n", &buf);
 		if (buf == 'c') {  //create circle

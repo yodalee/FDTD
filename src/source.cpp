@@ -13,7 +13,7 @@ double single_frequency::set(const double magnitude, const double frequency){
 }
 
 double single_frequency::get(const double time){
-	return mag*cos(2*pi*f*time);
+	return mag*sin(2*pi*f*time);
 }
 
 double gaussian::set(const double _mean, const double frequency){
