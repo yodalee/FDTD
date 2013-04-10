@@ -20,11 +20,11 @@ void FDTD::solve(){
 	Gnuplot g1("lines");
 	g1.reset_plot();
 	g1.set_yrange(-10,10);
-	vector<double> x((Nx+1)), y((Nx+1)*(Ny+1));
-	vector<double> z((Nx+1));
+	vector<double> x((Nx+1)*(Ny+1)), y((Nx+1)*(Ny+1));
+	vector<double> z((Nx+1)*(Ny+1));
 	for (int i = 0; i < Nx+1; ++i) {
 		for (int j = 0; j < Ny+1; ++j) {
-			 x[i*(1)] = i;
+			 x[i*(Ny+1)+j] = i;
 			 y[i*(Ny+1)+j] = j;
 		}
 	}
@@ -36,12 +36,14 @@ void FDTD::solve(){
 			usleep(1000);
 			g1.reset_plot();
 			for (int i = 0; i < Nx+1; ++i) {
-				//for (int j = 0; j < Ny+h; ++j) {
-					z[i*(1)] = m[i][Ny/2].Ey;
-				//}
+				for (int j = 0; j < Ny+1; ++j) {
+					//z[i*(1)] = m[i][Ny/2].Ey;
+					z[i*(Ny+1)+j] = m[i][j].Ey;
+				}
 			}
-			//g1.set_style("image");
-			g1.plot_xy(x,z, "plot");
+			g1.set_style("image");
+			//g1.plot_xy(x,z, "plot");
+			g1.plot_xyz(x,y,z, "plot");
 		}
 	} 
 	cerr << "press key:";
@@ -83,15 +85,12 @@ void FDTD::solveone(){
 		int idx = 0.5*Nx;
 		int idy = 0.5*Ny;
 		double Esource = input->get(time);
-		double Hsource = input->get(time-0.5*Dt)/imp0;
+		double Hsource = input->get(time+0.5*Dt)/imp0;
 		for (int j = 1; j < Ny; ++j) {
 			m[idx][j].Hzy	+= m[idx][j].DHx2*Esource;
 			m[idx+1][j].Ey	+= m[idx+1][j].CEy2*Hsource;
 		}
 	}
-	//pec
-	for (int i = 1; i < Nx+1; ++i) { m[i][Ny].Ex = 0; }
-	for (int j = 0; j < Ny+1; ++j) { m[Nx][j].Ey = 0; }
 };
 
 //********************************************
@@ -124,14 +123,6 @@ void FDTD::setStruct(string setting_file){
 	double nyquist = input->set(7, max_frequency);
 	Dt = 0.9*Ds/(cspeed*sqrt(2));
 	mesh::setstatic(Ds, Dt);
-	time = 0;
-	//initialize the memory space
-	initialmesh(Nx, Ny);
-	//initial PML structure
-	int PMLm = 2;
-	int layer = 10;
-	double inv = 1.0/layer;
-	double sigma_max = 0.8*(PMLm+1)/(imp0*Ds);
 	time = 0;
 	//initialize the memory space
 	initialmesh(Nx, Ny);
