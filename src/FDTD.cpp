@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <cstdio>
 #include <vector>
+#include <sstream>
+#include <limits>
 using namespace std;
 
 #include "FDTD.h"
@@ -34,6 +36,9 @@ void FDTD::solve(){
 		solveone();
 		if ((iterate&31) == 0) {
 			usleep(1000);
+			stringstream ss;
+			ss << iterate;
+			g1.savetops(ss.str(), 801, 401);
 			g1.reset_plot();
 			for (int i = 0; i < Nx+1; ++i) {
 				for (int j = 0; j < Ny+1; ++j) {
@@ -221,15 +226,15 @@ void FDTD::openfile(FILE* &fd, string filename) {
 void FDTD::genCircle(FILE* &fd)
 {
 	int cx, cy;
-	float radius, eps, mu;
+	float radius, eps=eps0, mu=mu0;
 	fscanf(fd, "%d %d %f\n", &cx, &cy, &radius);
-	fscanf(fd, "%f %f\n", &eps, &mu);
+	//fscanf(fd, "%f %f\n", &eps, &mu);
 	int r = floor(radius/Ds);
-	int xu = cx+r;
-	int xl = cx-r;
-	int yu = cy+r;
-	int yl = cy-r;
-	if ((xu > Nx) or (yu > Ny) or (xl < 0) or (yl < 0)) {
+	//int xu = cx+r;
+	//int xl = cx-r;
+	//int yu = cy+r;
+	//int yl = cy-r;
+	if ((cx+r > Nx) or (cy+r > Ny) or (cx-r < 0) or (cy-r < 0)) {
 		cerr << "circle shape format invalid" << endl;
 		exit(EXIT_FAILURE);
 	}
@@ -237,7 +242,7 @@ void FDTD::genCircle(FILE* &fd)
 	for (int i = 0; i < Nx+1; ++i) {
 		for (int j = 0; j < Ny+1; ++j) {
 			if ((cx-i)*(cx-i) + (cy-j)*(cy-j) <= radius*radius) {
-				m[i][j].setMaterial(mu, eps, 10000, 0,0,0);
+				m[i][j].setMaterial(mu, eps, 1e9, 0, 1e9,0);
 			}
 		}
 	}
