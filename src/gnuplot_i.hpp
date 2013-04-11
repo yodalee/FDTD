@@ -49,7 +49,7 @@
 #elif defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
 //all UNIX-like OSs (Linux, *BSD, MacOSX, Solaris, ...)
  #include <unistd.h>            // for access(), mkstemp()
- #define GP_MAX_TMP_FILES  1024
+ #define GP_MAX_TMP_FILES  64
 #else
  #error unsupported or unknown operating system
 #endif
@@ -232,6 +232,7 @@ class Gnuplot
 
     /// saves a gnuplot session to a postscript file, filename without extension
     Gnuplot& savetops(const std::string &filename = "gnuplot_output");
+    Gnuplot& savetops(const std::string &filename,int X,int Y);
 
 
     //----------------------------------------------------------------------------------
@@ -241,6 +242,7 @@ class Gnuplot
     ///  lines, points, linespoints, impulses, dots, steps, fsteps, histeps,
     ///  boxes, histograms, filledcurves
     Gnuplot& set_style(const std::string &stylestr = "points");
+    Gnuplot& set_view(const std::string &view = "60, 30, 1, 1");
     Gnuplot& set_dgrid3d(int X=10,int Y=10,bool m3d=false);
     /// interpolation and approximation of data, arguments:
     ///  csplines, bezier, acsplines (for data values > 0), sbezier, unique, frequency
@@ -261,7 +263,7 @@ class Gnuplot
 
     /// scales the size of the points used in plots
     Gnuplot& set_pointsize(const double pointsize = 1.0);
-
+    Gnuplot& set_size(double X,double Y);
     /// turns grid on/off
     inline Gnuplot& set_grid()	{cmd("set grid");return *this;};
     /// grid is not set by default
@@ -1032,6 +1034,10 @@ Gnuplot& Gnuplot::set_style(const std::string &stylestr)
 
     return *this;
 }
+Gnuplot& Gnuplot::set_view(const std::string &viewstr){
+    *this<<"set view "+viewstr;
+    return *this;
+}
 Gnuplot& Gnuplot::set_dgrid3d(int X, int Y,bool m3d){
    std::ostringstream tmp;
    if(m3d)
@@ -1083,15 +1089,24 @@ Gnuplot& Gnuplot::showonscreen()
 //
 Gnuplot& Gnuplot::savetops(const std::string &filename)
 {
-    cmd("set terminal postscript color");
+    cmd("set terminal png");
 
     std::ostringstream cmdstr;
-    cmdstr << "set output \"" << filename << ".ps\"";
+    cmdstr << "set output \"" << filename << ".png\"";
     cmd(cmdstr.str());
 
     return *this;
 }
+Gnuplot& Gnuplot::savetops(const std::string &filename, int X,int Y)
+{
+    std::ostringstream cmdstr;
+    cmdstr<<"set terminal png size "<<X<<", "<<Y<<"\n";
 
+    cmdstr << "set output \"" << filename << ".png\"";
+    cmd(cmdstr.str());
+
+    return *this;
+}
 //------------------------------------------------------------------------------
 //
 // Switches legend on
@@ -1160,7 +1175,12 @@ Gnuplot& Gnuplot::set_pointsize(const double pointsize)
 
     return *this;
 }
-
+Gnuplot& Gnuplot::set_size(double X,double Y){
+    std::ostringstream cmdstr;
+    cmdstr << "set size " << X<<", "<<Y;
+    cmd(cmdstr.str());
+	return *this;
+}
 //------------------------------------------------------------------------------
 //
 // set isoline density (grid) for plotting functions as surfaces
@@ -1887,9 +1907,9 @@ std::string Gnuplot::create_tmpfile(std::ofstream &tmp)
 {
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
-    char name[] = "gnuplotiXXXXXXXXX"; //tmp file in working directory
+    char name[] = "gnuplotiXXXXXX"; //tmp file in working directory
 #elif defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
-    char name[] = "/tmp/gnuplotiXXXXXXXXX"; // tmp file in /tmp
+    char name[] = "/tmp/gnuplotiXXXXXX"; // tmp file in /tmp
 #endif
 
     //

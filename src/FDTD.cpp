@@ -19,7 +19,7 @@ FDTD::~FDTD () {
 void FDTD::solve(){
 	Gnuplot g1("lines");
 	g1.reset_plot();
-	g1.set_yrange(-10,10);
+	//g1.set_yrange(0,10);
 	vector<double> x((Nx+1)*(Ny+1)), y((Nx+1)*(Ny+1));
 	vector<double> z((Nx+1)*(Ny+1));
 	for (int i = 0; i < Nx+1; ++i) {
@@ -32,7 +32,7 @@ void FDTD::solve(){
 	for (int iterate = 0; iterate < iteration; ++iterate) {
 		time += Dt;
 		solveone();
-		if ((iterate&15) == 0) {
+		if ((iterate&31) == 0) {
 			usleep(1000);
 			g1.reset_plot();
 			for (int i = 0; i < Nx+1; ++i) {
@@ -42,6 +42,7 @@ void FDTD::solve(){
 				}
 			}
 			g1.set_style("image");
+			g1.set_view("map");
 			//g1.plot_xy(x,z, "plot");
 			g1.plot_xyz(x,y,z, "plot");
 		}
@@ -86,7 +87,7 @@ void FDTD::solveone(){
 		int idy = 0.5*Ny;
 		double Esource = input->get(time);
 		double Hsource = input->get(time+0.5*Dt)/imp0;
-		for (int j = 1; j < Ny; ++j) {
+		for (int j = 0; j < Ny; ++j) {
 			m[idx][j].Hzy	+= m[idx][j].DHx2*Esource;
 			m[idx+1][j].Ey	+= m[idx+1][j].CEy2*Hsource;
 		}
@@ -236,7 +237,7 @@ void FDTD::genCircle(FILE* &fd)
 	for (int i = 0; i < Nx+1; ++i) {
 		for (int j = 0; j < Ny+1; ++j) {
 			if ((cx-i)*(cx-i) + (cy-j)*(cy-j) <= radius*radius) {
-				m[i][j].setMaterial(mu, eps);
+				m[i][j].setMaterial(mu, eps, 10000, 0,0,0);
 			}
 		}
 	}
