@@ -16,3 +16,6 @@ FDTD 0.1.5 (四月 8, 2013):
 	* Add:  replace double array with mesh
 	* Add:  apply DH, CE to accelarate
 	* Add:  Apply PML as the absorbing boundary condition
+
+FDTD 0.1.6 (四月 12, 2013):
+	* Add:  add structure code to simulation

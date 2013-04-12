@@ -47,6 +47,7 @@ public:
 private:
 	double mean;
 	double var;
+	double mag;
 };
 
 //********************************************

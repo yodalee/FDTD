@@ -16,16 +16,16 @@ double single_frequency::get(const double time){
 	return mag*sin(2*pi*f*time);
 }
 
-double gaussian::set(const double _mean, const double frequency){
-	assert((_mean > 0) and (frequency > 0));
-	//mean = _mean;
+double gaussian::set(const double _mag, const double frequency){
+	assert((_mag > 0) and (frequency > 0));
 	var = 0.5/(pi*frequency);
 	mean = 4*var;
+	mag = _mag;
 	return 2*frequency;
 }
 
 double gaussian::get(const double time){
-	return exp(-0.5*pow((time-mean)/var, 2.0))/(sqrt(2*pi)*var);
+	return mag*exp(-0.5*pow((time-mean)/var, 2.0));
 }
 
 double deri_gaussian::set(const double _mean, const double frequency){
