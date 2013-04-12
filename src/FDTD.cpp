@@ -2,7 +2,6 @@
 #include <cmath>
 #include <cstdlib>
 #include <algorithm>
-#include <cstdio>
 #include <vector>
 #include <sstream>
 #include <limits>
@@ -21,7 +20,7 @@ FDTD::~FDTD () {
 void FDTD::solve(){
 	Gnuplot g1("lines");
 	g1.reset_plot();
-	g1.set_zrange(-10,10);
+	g1.set_cbrange(-10,10);
 	vector<double> x((Nx+1)*(Ny+1)), y((Nx+1)*(Ny+1));
 	vector<double> z((Nx+1)*(Ny+1));
 	for (int i = 0; i < Nx+1; ++i) {
@@ -52,9 +51,6 @@ void FDTD::solve(){
 			g1.plot_xyz(x,y,z, "plot");
 		}
 	} 
-	cerr << "press key:";
-	fgetc(stdin);
-
 };
 
 //********************************************
@@ -112,21 +108,21 @@ void FDTD::solveone(){
 //	3. (1-2*Z/Rl|Rs) must within -1~1 -> Dt = 0.5*capacitance*Ds/min(Rs,Rl)
 //********************************************
 void FDTD::setStruct(string setting_file){
-	int lambda_sec; //lambda/Dx default 10
 	int StrucNum;
 	char buf;
+	float magnitude;
 	float max_frequency;
 	//*************
 	FILE* fd;
 	openfile(fd, setting_file);
 	fscanf(fd, "%d %d\n", &Nx, &Ny);
 	fscanf(fd, "%f\n", &Ds);
-	fscanf(fd, "%f %d\n", &max_frequency, &lambda_sec);
+	fscanf(fd, "%f %f\n", &magnitude,&max_frequency);
 	fscanf(fd, "%d\n", &iteration);
 	fscanf(fd, "%d\n", &StrucNum);
 	fscanf(fd, "source: ");
 
-	double nyquist = input->set(7, max_frequency);
+	double nyquist = input->set(magnitude, max_frequency);
 	Dt = 0.9*Ds/(cspeed*sqrt(2));
 	mesh::setstatic(Ds, Dt);
 	time = 0;
@@ -228,7 +224,6 @@ void FDTD::genCircle(FILE* &fd)
 	int cx, cy;
 	float radius, eps=eps0, mu=mu0;
 	fscanf(fd, "%d %d %f\n", &cx, &cy, &radius);
-	//fscanf(fd, "%f %f\n", &eps, &mu);
 	int r = floor(radius/Ds);
 	//int xu = cx+r;
 	//int xl = cx-r;
@@ -241,8 +236,8 @@ void FDTD::genCircle(FILE* &fd)
 	cout << "create a circle center " << cx << "," << cy << " radius " << radius << endl;
 	for (int i = 0; i < Nx+1; ++i) {
 		for (int j = 0; j < Ny+1; ++j) {
-			if ((cx-i)*(cx-i) + (cy-j)*(cy-j) <= radius*radius) {
-				m[i][j].setMaterial(mu, eps, 1e9, 0, 1e9,0);
+			if ((cx-i)*(cx-i) + (cy-j)*(cy-j) <= r*r) {
+				m[i][j].setMaterial("pec");
 			}
 		}
 	}

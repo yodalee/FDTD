@@ -1,3 +1,5 @@
+#include <string>
+using std::string;
 #include "mesh.h"
 
 double mesh::Ds = 0;
@@ -27,6 +29,15 @@ void mesh::setMaterial(double m, double e,
 	term=0.5*(sigy_*Dt)/(m);
 	DHy1 = (1.0-term)/(1.0+0.5*(sigx_*Dt)/(m));
 	DHy2 = (Dt/(m*Ds))/(1.0+term);
+}
+
+void mesh::setMaterial(string type){
+	if (type == "pec") {
+		CEx1 = 1;
+		CEx2 = 0;
+		CEy1 = 1;
+		CEy2 = 0;
+	}
 }
 
 void mesh::setstatic(double _Ds, double _Dt){
