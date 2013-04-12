@@ -49,7 +49,7 @@
 #elif defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
 //all UNIX-like OSs (Linux, *BSD, MacOSX, Solaris, ...)
  #include <unistd.h>            // for access(), mkstemp()
- #define GP_MAX_TMP_FILES  64
+ #define GP_MAX_TMP_FILES  1024
 #else
  #error unsupported or unknown operating system
 #endif
@@ -1034,6 +1034,7 @@ Gnuplot& Gnuplot::set_style(const std::string &stylestr)
 
     return *this;
 }
+<<<<<<< HEAD
 Gnuplot& Gnuplot::set_view(const std::string &viewstr){
     *this<<"set view "+viewstr;
     return *this;
@@ -1045,6 +1046,19 @@ Gnuplot& Gnuplot::set_dgrid3d(int X, int Y,bool m3d){
    tmp<<"set dgrid3d "<<X<<","<<Y<<"\n";
    cmd(tmp.str());
    return *this;
+=======
+Gnuplot& Gnuplot::set_view(const std::string &viewstr){
+    *this<<"set view "+viewstr;
+    return *this;
+}
+Gnuplot& Gnuplot::set_dgrid3d(int X, int Y,bool m3d){
+   std::ostringstream tmp;
+   if(m3d)
+        tmp<<"set pm3d\n";
+   tmp<<"set dgrid3d "<<X<<","<<Y<<"\n";
+   cmd(tmp.str());
+   return *this;
+>>>>>>> 286ca9b821a2c382e6ecb0543089deff2f95eff9
 }
 
 //------------------------------------------------------------------------------
@@ -1098,6 +1112,7 @@ Gnuplot& Gnuplot::savetops(const std::string &filename)
     return *this;
 }
 Gnuplot& Gnuplot::savetops(const std::string &filename, int X,int Y)
+<<<<<<< HEAD
 {
     std::ostringstream cmdstr;
     cmdstr<<"set terminal png size "<<X<<", "<<Y<<"\n";
@@ -1105,6 +1120,15 @@ Gnuplot& Gnuplot::savetops(const std::string &filename, int X,int Y)
     cmdstr << "set output \"" << filename << ".png\"";
     cmd(cmdstr.str());
 
+=======
+{
+    std::ostringstream cmdstr;
+    cmdstr<<"set terminal png size "<<X<<", "<<Y<<"\n";
+
+    cmdstr << "set output \"" << filename << ".png\"";
+    cmd(cmdstr.str());
+
+>>>>>>> 286ca9b821a2c382e6ecb0543089deff2f95eff9
     return *this;
 }
 //------------------------------------------------------------------------------
@@ -1175,7 +1199,11 @@ Gnuplot& Gnuplot::set_pointsize(const double pointsize)
 
     return *this;
 }
+<<<<<<< HEAD
 Gnuplot& Gnuplot::set_size(double X,double Y){
+=======
+Gnuplot& Gnuplot::set_size(double X,double Y){
+>>>>>>> 286ca9b821a2c382e6ecb0543089deff2f95eff9
     std::ostringstream cmdstr;
     cmdstr << "set size " << X<<", "<<Y;
     cmd(cmdstr.str());
