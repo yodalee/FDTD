@@ -225,10 +225,6 @@ void FDTD::genCircle(FILE* &fd)
 	float radius, eps=eps0, mu=mu0;
 	fscanf(fd, "%d %d %f\n", &cx, &cy, &radius);
 	int r = floor(radius/Ds);
-	//int xu = cx+r;
-	//int xl = cx-r;
-	//int yu = cy+r;
-	//int yl = cy-r;
 	if ((cx+r > Nx) or (cy+r > Ny) or (cx-r < 0) or (cy-r < 0)) {
 		cerr << "circle shape format invalid" << endl;
 		exit(EXIT_FAILURE);
