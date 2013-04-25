@@ -1047,19 +1047,6 @@ Gnuplot& Gnuplot::set_dgrid3d(int X, int Y,bool m3d){
    return *this;
 }
 
-Gnuplot& Gnuplot::set_view(const std::string &viewstr){
-    *this<<"set view "+viewstr;
-    return *this;
-}
-Gnuplot& Gnuplot::set_dgrid3d(int X, int Y,bool m3d){
-   std::ostringstream tmp;
-   if(m3d)
-        tmp<<"set pm3d\n";
-   tmp<<"set dgrid3d "<<X<<","<<Y<<"\n";
-   cmd(tmp.str());
-   return *this;
-}
-
 //------------------------------------------------------------------------------
 //
 // smooth: interpolation and approximation of data
