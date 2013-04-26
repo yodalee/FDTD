@@ -2,12 +2,19 @@
 # MACRO DEFINE
 #################################
 
+CUDA_PATH	?= /opt/cuda
+CUDA_LIB	?= $(CUDA_PATH)/lib
+CUDA_INC	?= $(CUDA_PATH)/include
+CUDA_BIN	?= $(CUDA_PATH)/bin
 CC			= gcc
 CXX			= g++
+NVCC		= $(CUDA_BIN)/nvcc
+CXXFLAGS	= -O2 -Wall
 CXXFLAGS 	= -g -Wall
-#CXXFLAGS	= -O2 -Wall
-INCLUDE 	= 
-TLIB 		= 
+CULDFLAGS   = -m32
+INCLUDE 	= -I$(CUDA_INC)
+CUINCLUDE   = 
+TLIB 		= -L$(CUDA_LIB) -lcuda -lcudart
 
 #################################
 # suffix rule
@@ -16,7 +23,7 @@ TLIB 		=
 
 .SUFFIXES: .cpp
 .cpp.o:
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $<
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $< -c
 
 .cpp :
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $< -o $@ -lm $(TLIB) -lg++

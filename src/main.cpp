@@ -55,7 +55,8 @@ int main (int argc, char *argv[])
 	string type = "single_frequency";
 	string setting = "config.txt";
     char c;
-    while((c=getopt(argc, argv, "hf:s:")) != -1)
+	bool byCUDA = false;
+    while((c=getopt(argc, argv, "hgf:s:")) != -1)
     {
         switch(c)
         {
@@ -68,6 +69,9 @@ int main (int argc, char *argv[])
 			case 's':		//set source type
 				type = optarg;
 				break;
+			case 'g':		//set source type
+				byCUDA = true;
+				break;
             default:
 				cerr << "Wrong Command" << endl;
 				return EXIT_FAILURE;
@@ -79,7 +83,8 @@ int main (int argc, char *argv[])
 	gensource(s, type);
 	fdtd.setSource(s);
 	fdtd.setStruct(setting);
-    fdtd.solve ();
+	if (byCUDA) { fdtd.solveCUDA();
+	} else { fdtd.solve (); }
 
     return EXIT_SUCCESS;
 }
