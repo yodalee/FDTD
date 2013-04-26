@@ -31,7 +31,7 @@ private:
 	int iteration;
 	float time;
 	
-	mesh** m;
+	mesh* m;
 };
 
 #endif

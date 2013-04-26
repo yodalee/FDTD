@@ -11,9 +11,6 @@ using namespace std;
 #include "gnuplot_i.hpp"
 
 FDTD::~FDTD () {
-	for (int i = 0; i < Ny+1; ++i) {
-		delete []m[i];
-	}
 	delete[] m;
 }
 
@@ -21,12 +18,12 @@ void FDTD::solve(){
 	Gnuplot g1("lines");
 	g1.reset_plot();
 	g1.set_cbrange(-10,10);
-	vector<double> x((Nx+1)*(Ny+1)), y((Nx+1)*(Ny+1));
-	vector<double> z((Nx+1)*(Ny+1));
-	for (int i = 0; i < Nx+1; ++i) {
-		for (int j = 0; j < Ny+1; ++j) {
-			 x[i*(Ny+1)+j] = i;
-			 y[i*(Ny+1)+j] = j;
+	vector<double> x(Nx*Ny), y(Nx*Ny);
+	vector<double> z(Nx*Ny);
+	for (int i = 0; i < Nx; ++i) {
+		for (int j = 0; j < Ny; ++j) {
+			 x[i*Ny+j] = i;
+			 y[i*Ny+j] = j;
 		}
 	}
 	//int idy = 0.5*Ny;
@@ -35,14 +32,13 @@ void FDTD::solve(){
 		solveone();
 		if ((iterate&31) == 0) {
 			usleep(1000);
-			stringstream ss;
-			ss << iterate;
-			g1.savetops(ss.str(), 801, 401);
+			//stringstream ss;
+			//ss << iterate;
+			//g1.savetops(ss.str(), 801, 401);
 			g1.reset_plot();
 			for (int i = 0; i < Nx+1; ++i) {
 				for (int j = 0; j < Ny+1; ++j) {
-					//z[i*(1)] = m[i][Ny/2].Ey;
-					z[i*(Ny+1)+j] = m[i][j].Ey;
+					z[i*Ny+j] = m[i*Ny+j].Ey;
 				}
 			}
 			g1.set_style("image");
@@ -69,16 +65,16 @@ void FDTD::solve(){
 //********************************************
 void FDTD::solveone(){
 	//update
-	for (int i = 0; i < Nx; ++i) {
-		for (int j = 0; j < Ny; ++j) {
-			m[i][j].Hzx = m[i][j].DHx1*m[i][j].Hzx - m[i][j].DHx2 * (m[i+1][j].Ey - m[i][j].Ey);
-			m[i][j].Hzy = m[i][j].DHy1*m[i][j].Hzy + m[i][j].DHy2 * (m[i][j+1].Ex - m[i][j].Ex);
+	for (int i = 0; i < Nx-1; ++i) {
+		for (int j = 0; j < Ny-1; ++j) {
+			m[i*Ny+j].Hzx = m[i*Ny+j].DHx1*m[i*Ny+j].Hzx - m[i*Ny+j].DHx2 * (m[(i+1)*Ny+j].Ey - m[i*Ny+j].Ey);
+			m[i*Ny+j].Hzy = m[i*Ny+j].DHy1*m[i*Ny+j].Hzy + m[i*Ny+j].DHy2 * (m[i*Ny+j+1].Ex - m[i*Ny+j].Ex);
 		}
 	}
-	for (int i = 1; i < Nx+1; ++i) {
-		for (int j = 1; j < Ny+1; ++j) {
-			m[i][j].Ex = m[i][j].CEx1*m[i][j].Ex + m[i][j].CEx2 * (m[i][j].Hzx + m[i][j].Hzy - m[i][j-1].Hzx - m[i][j-1].Hzy);
-			m[i][j].Ey = m[i][j].CEy1*m[i][j].Ey - m[i][j].CEy2 * (m[i][j].Hzx + m[i][j].Hzy - m[i-1][j].Hzx - m[i-1][j].Hzy);
+	for (int i = 1; i < Nx; ++i) {
+		for (int j = 1; j < Ny; ++j) {
+			m[i*Ny+j].Ex = m[i*Ny+j].CEx1*m[i*Ny+j].Ex + m[i*Ny+j].CEx2 * (m[i*Ny+j].Hzx + m[i*Ny+j].Hzy - m[i*Ny+j-1].Hzx - m[i*Ny+j-1].Hzy);
+			m[i*Ny+j].Ey = m[i*Ny+j].CEy1*m[i*Ny+j].Ey - m[i*Ny+j].CEy2 * (m[i*Ny+j].Hzx + m[i*Ny+j].Hzy - m[(i-1)*Ny+j].Hzx - m[(i-1)*Ny+j].Hzy);
 		}
 	}
 	//impulse
@@ -89,8 +85,8 @@ void FDTD::solveone(){
 		double Esource = input->get(time);
 		double Hsource = input->get(time+0.5*Dt)/imp0;
 		for (int j = 0; j < Ny; ++j) {
-			m[idx][j].Hzy	+= m[idx][j].DHx2*Esource;
-			m[idx+1][j].Ey	+= m[idx+1][j].CEy2*Hsource;
+			m[idx*Ny+j].Hzy	+= m[idx*Ny+j].DHx2*Esource;
+			m[(idx+1)*Ny+j].Ey	+= m[(idx+1)*Ny+j].CEy2*Hsource;
 		}
 	}
 };
@@ -134,23 +130,23 @@ void FDTD::setStruct(string setting_file){
 	double inv = 1.0/layer;
 	double sigma_max = 0.8*(PMLm+1)/(imp0*Ds);
 	//top bottom
-	for (int i = 0; i < Nx+1; ++i) {
+	for (int i = 0; i < Nx; ++i) {
 		for (int j = 0; j < layer; ++j) {
 			double sigy = pow((layer-j)*inv,PMLm)*sigma_max;
 			double sigy1_ = imp0*imp0*pow((layer-j-0.5)*inv,PMLm)*sigma_max;
 			double sigy2_ = imp0*imp0*pow((layer-j+0.5)*inv,PMLm)*sigma_max;
-			m[i][j].   setMaterial(mu0,eps0,0,0,sigy,sigy1_);
-			m[i][Ny-1-j].setMaterial(mu0,eps0,0,0,sigy,sigy2_);
+			m[i*Ny+j].   setMaterial(mu0,eps0,0,0,sigy,sigy1_);
+			m[i*Ny+Ny-1-j].setMaterial(mu0,eps0,0,0,sigy,sigy2_);
 		}
 	}
 	//left right
 	for (int i = 0; i < layer; ++i) {
-		for (int j = 0; j < Ny+1; ++j) {
+		for (int j = 0; j < Ny; ++j) {
 			double sigx = pow((layer-i)*inv,PMLm)*sigma_max;
 			double sigx1_ = imp0*imp0*pow((layer-i-0.5)*inv,PMLm)*sigma_max;
 			double sigx2_ = imp0*imp0*pow((layer-i+0.5)*inv,PMLm)*sigma_max;
-			m[i][j].setMaterial(mu0,eps0,sigx,sigx1_);
-			m[Nx-1-i][j].setMaterial(mu0,eps0,sigx,sigx2_);
+			m[i*Ny+j].setMaterial(mu0,eps0,sigx,sigx1_);
+			m[(Nx-1-i)*Ny+j].setMaterial(mu0,eps0,sigx,sigx2_);
 		}
 	}
 	//corner
@@ -162,10 +158,10 @@ void FDTD::setStruct(string setting_file){
 			double sigy = pow((layer-j)*inv,PMLm)*sigma_max;
 			double sigy1_ = imp0*imp0*pow((layer-j-0.5)*inv,PMLm)*sigma_max;
 			double sigy2_ = imp0*imp0*pow((layer-j+0.5)*inv,PMLm)*sigma_max;
-			m[i][j].setMaterial(mu0,eps0,sigx,sigx1_,sigy,sigy1_);
-			m[Nx-1-i][j].setMaterial(mu0,eps0,sigx,sigx2_,sigy,sigy1_);
-			m[i][Ny-1-j].setMaterial(mu0,eps0,sigx,sigx1_,sigy,sigy2_);
-			m[Nx-1-i][Ny-1-j].setMaterial(mu0,eps0,sigx,sigx2_,sigy,sigy2_);
+			m[i*Ny+j].setMaterial(mu0,eps0,sigx,sigx1_,sigy,sigy1_);
+			m[(Nx-1-i)*Ny+j].setMaterial(mu0,eps0,sigx,sigx2_,sigy,sigy1_);
+			m[i*Ny+Ny-1-j].setMaterial(mu0,eps0,sigx,sigx1_,sigy,sigy2_);
+			m[(Nx-1-i)*Ny+Ny-1-j].setMaterial(mu0,eps0,sigx,sigx2_,sigy,sigy2_);
 		}
 	}
 	//initial special structure
@@ -190,10 +186,7 @@ void FDTD::setStruct(string setting_file){
 //********************************************
 void FDTD::initialmesh(int Nx, int Ny)
 {
-	m = new mesh*[Nx+1];
-	for (int i = 0; i < Nx+1; ++i) {
-		m[i] = new mesh[Ny+1];
-	}
+	m = new mesh[Nx*Ny];
 }
 
 //********************************************
@@ -233,7 +226,7 @@ void FDTD::genCircle(FILE* &fd)
 	for (int i = 0; i < Nx+1; ++i) {
 		for (int j = 0; j < Ny+1; ++j) {
 			if ((cx-i)*(cx-i) + (cy-j)*(cy-j) <= r*r) {
-				m[i][j].setMaterial("pec");
+				m[i*(Ny+1)+j].setMaterial("pec");
 			}
 		}
 	}
