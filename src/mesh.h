@@ -8,6 +8,9 @@
 #ifndef _MESH_H_
 #define _MESH_H_
 
+#include <string>
+using namespace std;
+
 #include "constant.h"
 
 typedef struct mesh mesh;

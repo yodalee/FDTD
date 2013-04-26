@@ -6,6 +6,7 @@
 #include "constant.h"
 #include "mesh.h"
 #include "source.h"
+#include "displayer.h"
 
 class FDTD {
 public:
@@ -32,6 +33,7 @@ private:
 	float time;
 	
 	mesh* m;
+	displayer* display;
 };
 
 #endif

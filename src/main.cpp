@@ -31,6 +31,7 @@ using namespace std;
 
 #include "FDTD.h"
 #include "source.h"
+#include "displayer.h"
 
 int usage()
 {

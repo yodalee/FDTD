@@ -13,36 +13,37 @@ using namespace std;
 FDTD::~FDTD () { delete[] m; }
 
 void FDTD::solve(){
-	Gnuplot g1("lines");
-	g1.reset_plot();
-	g1.set_cbrange(-10,10);
-	vector<double> x(Nx*Ny), y(Nx*Ny);
-	vector<double> z(Nx*Ny);
-	for (int i = 0; i < Nx; ++i) {
-		for (int j = 0; j < Ny; ++j) {
-			 x[i*Ny+j] = i;
-			 y[i*Ny+j] = j;
-		}
-	}
+	//Gnuplot g1("lines");
+	//g1.reset_plot();
+	//g1.set_cbrange(-10,10);
+	//vector<double> x(Nx*Ny), y(Nx*Ny);
+	//vector<double> z(Nx*Ny);
+	//for (int i = 0; i < Nx; ++i) {
+	//	for (int j = 0; j < Ny; ++j) {
+	//		 x[i*Ny+j] = i;
+	//		 y[i*Ny+j] = j;
+	//	}
+	//}
 	//int idy = 0.5*Ny;
 	for (int iterate = 0; iterate < iteration; ++iterate) {
 		time += Dt;
 		solveone();
 		if ((iterate&31) == 0) {
 			usleep(1000);
-			//stringstream ss;
-			//ss << iterate;
+			stringstream ss;
+			ss << iterate;
+			display->plot(m, ss.str());
 			//g1.savetops(ss.str(), 801, 401);
-			g1.reset_plot();
-			for (int i = 0; i < Nx; ++i) {
-				for (int j = 0; j < Ny; ++j) {
-					z[i*Ny+j] = m[i*Ny+j].Ey;
-				}
-			}
-			g1.set_style("image");
-			g1.set_view("map");
-			//g1.plot_xy(x,z, "plot");
-			g1.plot_xyz(x,y,z, "plot");
+			//g1.reset_plot();
+			//for (int i = 0; i < Nx; ++i) {
+			//	for (int j = 0; j < Ny; ++j) {
+			//		z[i*Ny+j] = m[i*Ny+j].Ey;
+			//	}
+			//}
+			//g1.set_style("image");
+			//g1.set_view("map");
+			////g1.plot_xy(x,z, "plot");
+			//g1.plot_xyz(x,y,z, "plot");
 		}
 	} 
 };
@@ -79,7 +80,7 @@ void FDTD::solveone(){
 	if (time < 1e-9) {
 		//add source
 		int idx = 0.5*Nx;
-		int idy = 0.5*Ny;
+		//int idy = 0.5*Ny;
 		double Esource = input->get(time);
 		double Hsource = input->get(time+0.5*Dt)/imp0;
 		for (int j = 0; j < Ny; ++j) {
@@ -116,12 +117,14 @@ void FDTD::setStruct(string setting_file){
 	fscanf(fd, "%d\n", &StrucNum);
 	fscanf(fd, "source: ");
 
-	double nyquist = input->set(magnitude, max_frequency);
+	input->set(magnitude, max_frequency);
 	Dt = 0.9*Ds/(cspeed*sqrt(2));
 	mesh::setstatic(Ds, Dt);
 	time = 0;
 	//initialize the memory space
 	initialmesh(Nx, Ny);
+	//initial displayer
+	display = new displayer(Nx, Ny);
 	//initial PML structure
 	int PMLm = 2;
 	int layer = 10;
@@ -213,7 +216,7 @@ void FDTD::openfile(FILE* &fd, string filename) {
 void FDTD::genCircle(FILE* &fd)
 {
 	int cx, cy;
-	float radius, eps=eps0, mu=mu0;
+	float radius;
 	fscanf(fd, "%d %d %f\n", &cx, &cy, &radius);
 	int r = floor(radius/Ds);
 	if ((cx+r > Nx) or (cy+r > Ny) or (cx-r < 0) or (cy-r < 0)) {
