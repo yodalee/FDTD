@@ -25,7 +25,7 @@ TLIB 		=
 # File Dependencies
 #################################
 GOAL = FDTD
-SRC = main.cpp FDTD.cpp source.cpp mesh.cpp
+SRC = main.cpp FDTD.cpp source.cpp mesh.cpp gnuplot.cpp
 OBJ = $(addsuffix .o, $(basename $(SRC)))
 $(GOAL): $(OBJ)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $(TLIB) -o $@ $(OBJ)

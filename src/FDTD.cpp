@@ -8,11 +8,9 @@
 using namespace std;
 
 #include "FDTD.h"
-#include "gnuplot_i.hpp"
+#include "gnuplot.h"
 
-FDTD::~FDTD () {
-	delete[] m;
-}
+FDTD::~FDTD () { delete[] m; }
 
 void FDTD::solve(){
 	Gnuplot g1("lines");
@@ -36,8 +34,8 @@ void FDTD::solve(){
 			//ss << iterate;
 			//g1.savetops(ss.str(), 801, 401);
 			g1.reset_plot();
-			for (int i = 0; i < Nx+1; ++i) {
-				for (int j = 0; j < Ny+1; ++j) {
+			for (int i = 0; i < Nx; ++i) {
+				for (int j = 0; j < Ny; ++j) {
 					z[i*Ny+j] = m[i*Ny+j].Ey;
 				}
 			}
