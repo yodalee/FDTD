@@ -7,43 +7,25 @@
 #include <limits>
 using namespace std;
 
+#include <cuda_runtime.h>
+
 #include "FDTD.h"
 #include "gnuplot.h"
+
+extern "C"
+void cudaUpdateKernel(mesh* m, int Nx, int Ny, double time);
 
 FDTD::~FDTD () { delete[] m; }
 
 void FDTD::solve(){
-	//Gnuplot g1("lines");
-	//g1.reset_plot();
-	//g1.set_cbrange(-10,10);
-	//vector<double> x(Nx*Ny), y(Nx*Ny);
-	//vector<double> z(Nx*Ny);
-	//for (int i = 0; i < Nx; ++i) {
-	//	for (int j = 0; j < Ny; ++j) {
-	//		 x[i*Ny+j] = i;
-	//		 y[i*Ny+j] = j;
-	//	}
-	//}
-	//int idy = 0.5*Ny;
 	for (int iterate = 0; iterate < iteration; ++iterate) {
 		time += Dt;
 		solveone();
 		if ((iterate&31) == 0) {
-			usleep(1000);
 			stringstream ss;
 			ss << iterate;
 			display->plot(m, ss.str());
-			//g1.savetops(ss.str(), 801, 401);
-			//g1.reset_plot();
-			//for (int i = 0; i < Nx; ++i) {
-			//	for (int j = 0; j < Ny; ++j) {
-			//		z[i*Ny+j] = m[i*Ny+j].Ey;
-			//	}
-			//}
-			//g1.set_style("image");
-			//g1.set_view("map");
-			////g1.plot_xy(x,z, "plot");
-			//g1.plot_xyz(x,y,z, "plot");
+			usleep(1000);
 		}
 	} 
 };
@@ -89,6 +71,47 @@ void FDTD::solveone(){
 		}
 	}
 };
+
+//********************************************
+// Function: solveCUDA
+// Description: like solve(), but initial cuda memory first
+//********************************************
+void FDTD::solveCUDA(){
+	cudaError_t err = cudaSuccess;
+	size_t size = Nx*Ny*sizeof(mesh);
+	mesh *d_m = NULL;
+	err = cudaMalloc((void **)&d_m, size);
+	if (err != cudaSuccess)
+	{
+		cerr << "Failed to allocate device memory (error code "<< cudaGetErrorString(err) << ")!\n";
+		exit(EXIT_FAILURE);
+	}
+	err = cudaMemcpy(d_m, m, size, cudaMemcpyHostToDevice);
+
+	if (err != cudaSuccess)
+	{   
+		cerr << "Failed to allocate device memory (error code "<< cudaGetErrorString(err) << ")!\n";
+		exit(EXIT_FAILURE);
+	}   
+
+	for (int iterate = 0; iterate < iteration; ++iterate) {
+		time += Dt;
+		cudaUpdateKernel(d_m, Nx, Ny, time);
+		if ((iterate&31) == 0) {
+			cout << "Copy output data from the CUDA device to the host memory\n";
+			err = cudaMemcpy(m, d_m, size, cudaMemcpyDeviceToHost);
+			if (err != cudaSuccess)
+			{   
+				cerr << "Failed to copy vector C from device to host (error code " << cudaGetErrorString(err) << ")!\n";
+				exit(EXIT_FAILURE);
+			} 
+			stringstream ss;
+			ss << iterate;
+			display->plot(m, ss.str());
+			usleep(1000);
+		}
+	} 
+}
 
 //********************************************
 // Function: setStruct
@@ -185,10 +208,7 @@ void FDTD::setStruct(string setting_file){
 // Function: initialmesh
 // Description: initial memory
 //********************************************
-void FDTD::initialmesh(int Nx, int Ny)
-{
-	m = new mesh[Nx*Ny];
-}
+void FDTD::initialmesh(int Nx, int Ny) { m = new mesh[Nx*Ny]; }
 
 //********************************************
 // Function: setSource

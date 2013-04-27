@@ -11,7 +11,7 @@ CXX			= g++
 NVCC		= $(CUDA_BIN)/nvcc
 CXXFLAGS	= -O2 -Wall
 CXXFLAGS 	= -g -Wall
-CULDFLAGS   = -m32
+CULDFLAGS   = -m32 -arch sm_13
 INCLUDE 	= -I$(CUDA_INC)
 CUINCLUDE   = 
 TLIB 		= -L$(CUDA_LIB) -lcuda -lcudart
@@ -34,8 +34,13 @@ TLIB 		= -L$(CUDA_LIB) -lcuda -lcudart
 GOAL = FDTD
 SRC = main.cpp FDTD.cpp source.cpp mesh.cpp gnuplot.cpp displayer.cpp
 OBJ = $(addsuffix .o, $(basename $(SRC)))
-$(GOAL): $(OBJ)
-	$(CXX) $(CXXFLAGS) $(INCLUDE) $(TLIB) -o $@ $(OBJ)
+$(GOAL): $(OBJ) solver.o
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $(TLIB) -o $@ $(OBJ) solver.o
+
+solver.o: solver.cu
+	$(NVCC) $(CULDFLAGS) $(CUINCLUDE) -o $@ $< -c
+
+
 
 #################################
 # Other function 
