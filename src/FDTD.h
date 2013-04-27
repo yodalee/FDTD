@@ -16,6 +16,7 @@ public:
 	void setSource(source* s);
 	void solve();
 	void solveone();
+	void solveCUDA();
 private:
 	void openfile(FILE* &fd, string filename);
 	void genCircle(FILE* &fd);
