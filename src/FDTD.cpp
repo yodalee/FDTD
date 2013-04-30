@@ -7,7 +7,9 @@
 #include <limits>
 using namespace std;
 
+#include <sys/time.h>
 #include <cuda_runtime.h>
+#include <cuda_profiler_api.h>
 
 #include "FDTD.h"
 #include "gnuplot.h"
@@ -18,16 +20,28 @@ void cudaUpdateKernel(mesh* m, int Nx, int Ny, double time);
 FDTD::~FDTD () { delete[] m; }
 
 void FDTD::solve(){
+	long long unsigned totaltime = 0;
+	timeval tv_start, tv_end;
+#if __linux__
+	gettimeofday(&tv_start, NULL);
+#endif
 	for (int iterate = 0; iterate < iteration; ++iterate) {
 		time += Dt;
 		solveone();
-		if ((iterate&31) == 0) {
-			stringstream ss;
-			ss << iterate;
-			display->plot(m, ss.str());
-			usleep(1000);
-		}
+		//if ((iterate&31) == 0) {
+		//	stringstream ss;
+		//	ss << iterate;
+		//	display->plot(m, ss.str());
+		//	usleep(1000);
+		//}
 	} 
+#if __linux__
+	gettimeofday(&tv_end, NULL);
+	totaltime = 1000000u * (tv_end.tv_sec - tv_start.tv_sec);
+	totaltime += tv_end.tv_usec - tv_start.tv_usec;
+	cout << "CPU total time to iterate "<< iteration << " times is: " << totaltime << " usec" << endl;
+	cout << "or, " << totaltime/1e6 << " sec" << endl;
+#endif
 };
 
 //********************************************
@@ -78,6 +92,11 @@ void FDTD::solveone(){
 //********************************************
 void FDTD::solveCUDA(){
 	cudaError_t err = cudaSuccess;
+	timeval tv_start, tv_end;
+	long long unsigned totaltime;
+#if __linux__
+	gettimeofday(&tv_start, NULL);
+#endif
 	size_t size = Nx*Ny*sizeof(mesh);
 	mesh *d_m = NULL;
 	err = cudaMalloc((void **)&d_m, size);
@@ -93,25 +112,41 @@ void FDTD::solveCUDA(){
 		cerr << "Failed to allocate device memory (error code "<< cudaGetErrorString(err) << ")!\n";
 		exit(EXIT_FAILURE);
 	}   
+#if __linux__
+	gettimeofday(&tv_end, NULL);
+	totaltime = 1000000u * (tv_end.tv_sec - tv_start.tv_sec);
+	totaltime += tv_end.tv_usec - tv_start.tv_usec;
+	cout << "CPU total time to copy memory is " <<  totaltime << " usec" << endl;
+#endif
 
+#if __linux__
+	gettimeofday(&tv_start, NULL);
+#endif
 	for (int iterate = 0; iterate < iteration; ++iterate) {
 		time += Dt;
 		cudaUpdateKernel(d_m, Nx, Ny, time);
-		cudaDeviceSynchronize();
-		if ((iterate&31) == 0) {
-			cout << "Copy output data from the CUDA device to the host memory\n";
-			err = cudaMemcpy(m, d_m, size, cudaMemcpyDeviceToHost);
-			if (err != cudaSuccess)
-			{   
-				cerr << "Failed to copy vector C from device to host (error code " << cudaGetErrorString(err) << ")!\n";
-				exit(EXIT_FAILURE);
-			} 
-			stringstream ss;
-			ss << iterate;
-			display->plot(m, ss.str());
-			usleep(1000);
-		}
+		//cudaDeviceSynchronize();
+		//if ((iterate&31) == 0) {
+		//	cout << "Copy output data from the CUDA device to the host memory\n";
+		//	err = cudaMemcpy(m, d_m, size, cudaMemcpyDeviceToHost);
+		//	if (err != cudaSuccess)
+		//	{   
+		//		cerr << "Failed to copy vector C from device to host (error code " << cudaGetErrorString(err) << ")!\n";
+		//		exit(EXIT_FAILURE);
+		//	} 
+		//	stringstream ss;
+		//	ss << iterate;
+		//	display->plot(m, ss.str());
+		//	usleep(1000);
+		//}
 	} 
+#if __linux__
+	gettimeofday(&tv_end, NULL);
+	totaltime = 1000000u * (tv_end.tv_sec - tv_start.tv_sec);
+	totaltime += tv_end.tv_usec - tv_start.tv_usec;
+	cout << "CPU total time to iterate "<< iteration << " times is: " << totaltime << " usec" << endl;
+	cout << "or, " << totaltime/1e6 << " sec" << endl;
+#endif
 }
 
 //********************************************

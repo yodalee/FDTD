@@ -2,3 +2,5 @@
 FDTD
 log
 *.swp
+src/bin
+src/library
