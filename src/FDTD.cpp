@@ -21,12 +21,12 @@ void FDTD::solve(){
 	for (int iterate = 0; iterate < iteration; ++iterate) {
 		time += Dt;
 		solveone();
-		if ((iterate&31) == 0) {
-			stringstream ss;
-			ss << iterate;
-			display->plot(m, ss.str());
-			usleep(1000);
-		}
+		//if ((iterate&31) == 0) {
+		//	stringstream ss;
+		//	ss << iterate;
+		//	display->plot(m, ss.str());
+		//	usleep(1000);
+		//}
 	} 
 };
 
@@ -97,20 +97,20 @@ void FDTD::solveCUDA(){
 	for (int iterate = 0; iterate < iteration; ++iterate) {
 		time += Dt;
 		cudaUpdateKernel(d_m, Nx, Ny, time);
-		cudaDeviceSynchronize();
-		if ((iterate&31) == 0) {
-			cout << "Copy output data from the CUDA device to the host memory\n";
-			err = cudaMemcpy(m, d_m, size, cudaMemcpyDeviceToHost);
-			if (err != cudaSuccess)
-			{   
-				cerr << "Failed to copy vector C from device to host (error code " << cudaGetErrorString(err) << ")!\n";
-				exit(EXIT_FAILURE);
-			} 
-			stringstream ss;
-			ss << iterate;
-			display->plot(m, ss.str());
-			usleep(1000);
-		}
+		//cudaDeviceSynchronize();
+		//if ((iterate&31) == 0) {
+		//	cout << "Copy output data from the CUDA device to the host memory\n";
+		//	err = cudaMemcpy(m, d_m, size, cudaMemcpyDeviceToHost);
+		//	if (err != cudaSuccess)
+		//	{   
+		//		cerr << "Failed to copy vector C from device to host (error code " << cudaGetErrorString(err) << ")!\n";
+		//		exit(EXIT_FAILURE);
+		//	} 
+		//	stringstream ss;
+		//	ss << iterate;
+		//	display->plot(m, ss.str());
+		//	usleep(1000);
+		//}
 	} 
 }
 

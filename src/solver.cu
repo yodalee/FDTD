@@ -44,18 +44,21 @@ updateSource(mesh *m, int W, int H, double time){
 	int idy = blockIdx.y * blockDim.y + threadIdx.y;
 	int k = idy*W+idx;
 	if(idx<W && idx>0 && idy>0 && idy<H){
-		double Hs = source(idx, idy, time);
-		double Es = source(idx, idy, time);
+		double s = source(idx, idy, time);
+		//double Hs = source(idx, idy, time);
+		//double Es = source(idx, idy, time);
 		m[k].Hzy+= m[k].DHx2*	s;
 		m[k+1].Ey	+= m[k+1].CEy2*s/(120*pi);
 	}
 	__syncthreads();
 }
 
+#define gridsize 64
+
 extern "C"
 void cudaUpdateKernel(mesh* d_m, int Nx, int Ny, double t){
-	dim3 dimBlock(32,32);
-	dim3 dimGrid(ceil(Nx/32), ceil(Ny/32));
+	dim3 dimBlock(gridsize,gridsize);
+	dim3 dimGrid(ceil(Nx/gridsize), ceil(Ny/gridsize));
 	updateH<<<dimGrid, dimBlock>>>(d_m, Nx, Ny);
 	updateE<<<dimGrid, dimBlock>>>(d_m, Nx, Ny);
 	updateSource<<<dimGrid, dimBlock>>>(d_m, Nx, Ny, t);
