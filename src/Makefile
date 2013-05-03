@@ -53,8 +53,8 @@ SHELL         = /bin/sh
 #==================================================
 ifeq ($(ver),debug)
 	CFLAGS   = -O1 -g3 -Wall -Ddebug -pthread ${DEFINES} 
-	CXXFLAGS = -O1 -g3 -Wall -Ddebug ${DEFINES} 
-	LIBS     = -L. -lncurses -pthread -L$(CUDA_LIB) -lcuda -lcudart
+	CXXFLAGS = -O1 -g3 -Wall -Ddebug ${DEFINES} -fopenmp
+	LIBS     = -L. -lncurses -pthread -L$(CUDA_LIB) -lcuda -lcudart -lgomp
 	INCLUDE  = -I. -I$(CUDA_INC)
 else
 	CFLAGS   = -O3 -Wall -pthread ${DEFINES} 

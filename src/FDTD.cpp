@@ -5,6 +5,7 @@
 #include <vector>
 #include <sstream>
 #include <limits>
+#include <omp.h>
 using namespace std;
 
 #include <sys/time.h>
@@ -60,13 +61,17 @@ void FDTD::solve(){
 //********************************************
 void FDTD::solveone(){
 	//update
+#pragma omp parallel for
 	for (int i = 0; i < Nx-1; ++i) {
+#pragma omp parallel for
 		for (int j = 0; j < Ny-1; ++j) {
 			m[i*Ny+j].Hzx = m[i*Ny+j].DHx1*m[i*Ny+j].Hzx - m[i*Ny+j].DHx2 * (m[(i+1)*Ny+j].Ey - m[i*Ny+j].Ey);
 			m[i*Ny+j].Hzy = m[i*Ny+j].DHy1*m[i*Ny+j].Hzy + m[i*Ny+j].DHy2 * (m[i*Ny+j+1].Ex - m[i*Ny+j].Ex);
 		}
 	}
+#pragma omp parallel for
 	for (int i = 1; i < Nx; ++i) {
+#pragma omp parallel for
 		for (int j = 1; j < Ny; ++j) {
 			m[i*Ny+j].Ex = m[i*Ny+j].CEx1*m[i*Ny+j].Ex + m[i*Ny+j].CEx2 * (m[i*Ny+j].Hzx + m[i*Ny+j].Hzy - m[i*Ny+j-1].Hzx - m[i*Ny+j-1].Hzy);
 			m[i*Ny+j].Ey = m[i*Ny+j].CEy1*m[i*Ny+j].Ey - m[i*Ny+j].CEy2 * (m[i*Ny+j].Hzx + m[i*Ny+j].Hzy - m[(i-1)*Ny+j].Hzx - m[(i-1)*Ny+j].Hzy);
