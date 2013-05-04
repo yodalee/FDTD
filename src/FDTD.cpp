@@ -121,7 +121,7 @@ void FDTD::solveCUDA(){
 	gettimeofday(&tv_end, NULL);
 	totaltime = 1000000u * (tv_end.tv_sec - tv_start.tv_sec);
 	totaltime += tv_end.tv_usec - tv_start.tv_usec;
-	cout << "CPU total time to copy memory is " <<  totaltime << " usec" << endl;
+	cout << "GPU total time to copy memory is " <<  totaltime << " usec" << endl;
 #endif
 
 #if __linux__
@@ -149,9 +149,10 @@ void FDTD::solveCUDA(){
 	gettimeofday(&tv_end, NULL);
 	totaltime = 1000000u * (tv_end.tv_sec - tv_start.tv_sec);
 	totaltime += tv_end.tv_usec - tv_start.tv_usec;
-	cout << "CPU total time to iterate "<< iteration << " times is: " << totaltime << " usec" << endl;
+	cout << "GPU total time to iterate "<< iteration << " times is: " << totaltime << " usec" << endl;
 	cout << "or, " << totaltime/1e6 << " sec" << endl;
 #endif
+	cudaFree(d_m);
 }
 
 //********************************************

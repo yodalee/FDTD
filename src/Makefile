@@ -54,14 +54,13 @@ SHELL         = /bin/sh
 ifeq ($(ver),debug)
 	CFLAGS   = -O1 -g3 -Wall -Ddebug -pthread ${DEFINES} 
 	CXXFLAGS = -O1 -g3 -Wall -Ddebug ${DEFINES} -fopenmp
-	LIBS     = -L. -lncurses -pthread -L$(CUDA_LIB) -lcuda -lcudart -lgomp
-	INCLUDE  = -I. -I$(CUDA_INC)
 else
 	CFLAGS   = -O3 -Wall -pthread ${DEFINES} 
 	CXXFLAGS = -O3 -Wall ${DEFINES} 
-	LIBS     = -L. -lncurses -pthread
-	INCLUDE  = -I.
 endif
+LIBS     = -L. -lncurses -pthread -L$(CUDA_LIB) -lcuda -lcudart -lgomp
+INCLUDE  = -I. -I$(CUDA_INC)
+
 CUDA_PATH	?= /opt/cuda
 ifeq ($(OS_SIZE), 32)
 	CUDA_LIB	?= $(CUDA_PATH)/lib
@@ -107,6 +106,7 @@ $(TARGET): $(OBJECT_FILE) solver.o
 	cd $(LIBRARY_DIR); \
 	$(LINKER) -o $@ $(OBJECT_FILE) $(LIBS); \
 	cd ..
+	@$(MOVE) $(LIBRARY_DIR)/$@ $(BIN_DIR)
 
 solver.o: solver.cu
 	$(NVCC) -c $< -o $@ $(CULDFLAGS) $(CUINCLUDE)
