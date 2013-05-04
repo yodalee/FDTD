@@ -18,8 +18,6 @@ updateH(mesh* m, int W, int H)
 		m[k].Hzx = m[k].DHx1*m[k].Hzx - m[k].DHx2 * (m[k+H].Ey - m[k].Ey);
 		m[k].Hzy = m[k].DHy1*m[k].Hzy + m[k].DHy2 * (m[k+1].Ex - m[k].Ex);
 	}
-	//source
-	__syncthreads();
 }
 
 //E
@@ -34,8 +32,6 @@ updateE(mesh *m, int W, int H)
 		m[k].Ex = m[k].CEx1*m[k].Ex + m[k].CEx2 * (m[k].Hzx + m[k].Hzy - m[k-1].Hzx - m[k-1].Hzy);
 		m[k].Ey = m[k].CEy1*m[k].Ey - m[k].CEy2 * (m[k].Hzx + m[k].Hzy - m[k-H].Hzx - m[k-H].Hzy);
 	}
-	//source
-	__syncthreads();
 }
 
 __global__ void 
@@ -50,15 +46,14 @@ updateSource(mesh *m, int W, int H, double time){
 		m[k].Hzy+= m[k].DHx2*	s;
 		m[k+1].Ey	+= m[k+1].CEy2*s/(120*pi);
 	}
-	__syncthreads();
 }
 
-#define gridsize 64
+#define BLOCKSIZ 128
 
 extern "C"
 void cudaUpdateKernel(mesh* d_m, int Nx, int Ny, double t){
-	dim3 dimBlock(gridsize,gridsize);
-	dim3 dimGrid(ceil(Nx/gridsize), ceil(Ny/gridsize));
+	dim3 dimBlock(BLOCKSIZ,BLOCKSIZ);
+	dim3 dimGrid(ceil(Nx/BLOCKSIZ), ceil(Ny/BLOCKSIZ));
 	updateH<<<dimGrid, dimBlock>>>(d_m, Nx, Ny);
 	updateE<<<dimGrid, dimBlock>>>(d_m, Nx, Ny);
 	updateSource<<<dimGrid, dimBlock>>>(d_m, Nx, Ny, t);
